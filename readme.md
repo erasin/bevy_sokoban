@@ -2,6 +2,7 @@
 
 * 参考文件 [Rust sokoban](https://sokoban.iolivia.me/)
 
+![game](assets/game.png)
 
 ## ecs 
 
