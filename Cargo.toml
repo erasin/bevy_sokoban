@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["erasin <erasinoo@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-bevy = { path = "/Users/erasin/Development/rust/game/bevy" }
-# bevy = "0.1.2"
+bevy = "0.1.2"
 rand = "0.7"
