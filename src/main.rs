@@ -103,17 +103,19 @@ fn setup(
         });
 
     // 地图加载
-    let map_string: &str = "
-        N N W W W W W W
-        W W W . . . . W
-        W . . . B . . W
-        W . . . . . . W 
-        W . P . . . . W
-        W . . . . . . W
-        W . . S . . . W
-        W . . . . . . W
-        W W W W W W W W
-        ";
+    let map_string: &str = std::include_str!("../assets/m1.txt");
+
+    // let map_string: &str = "
+    //     N N W W W W W W
+    //     W W W . . . . W
+    //     W . . . B . . W
+    //     W . . . . . . W
+    //     W . P . . . . W
+    //     W . . . . . . W
+    //     W . . S . . . W
+    //     W . . . . . . W
+    //     W W W W W W W W
+    //     ";
 
     let rows: Vec<&str> = map_string.trim().split('\n').map(|x| x.trim()).collect();
 
@@ -221,8 +223,7 @@ fn setup(
                             ..Default::default()
                         })
                         .with(pos)
-                        .with(BoxSpot {})
-                        .with(Immovable);
+                        .with(BoxSpot {});
                 }
                 "N" => (),
                 c => panic!("unrecognized map item {}", c),
@@ -300,17 +301,31 @@ fn player_movement_system(
         p2.x = p2.x + vol.x;
         p2.y = p2.y + vol.y;
 
+        // 下下位置
+        let mut p3 = pos.clone();
+        p3.x = p2.x + vol.x;
+        p3.y = p2.y + vol.y;
+
+        let mut p3_move = true;
+
         for (pos_im, _) in &mut immovable.iter() {
             if pos_im.x == p2.x && pos_im.y == p2.y {
                 vol = Position { x: 0.0, y: 0.0 };
+            }
+            if pos_im.x == p3.x && pos_im.y == p3.y {
+                p3_move = false;
             }
         }
 
         if vol.x != 0.0 || vol.y != 0.0 {
             for (mut pos_mo, _) in &mut moveable.iter() {
                 if pos_mo.x == p2.x && pos_mo.y == p2.y {
-                    pos_mo.x = pos_mo.x + vol.x;
-                    pos_mo.y = pos_mo.y + vol.y;
+                    if p3_move {
+                        pos_mo.x = pos_mo.x + vol.x;
+                        pos_mo.y = pos_mo.y + vol.y;
+                    } else {
+                        vol = Position { x: 0.0, y: 0.0 };
+                    }
                 }
             }
 
