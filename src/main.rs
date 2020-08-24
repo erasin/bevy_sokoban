@@ -1,10 +1,16 @@
-use bevy::{math::vec2, prelude::*, render::camera::Camera, render::pass::ClearColor};
+use bevy::{
+    diagnostic::FrameTimeDiagnosticsPlugin, math::vec2, prelude::*, render::camera::Camera,
+    render::pass::ClearColor,
+};
 
 const TILED_WIDTH: f32 = 32.0;
 const SCALE: f32 = 2.0;
 
 /// 用户
-struct Player {}
+struct Player {
+    name: String,
+    step: i32,
+}
 
 /// 箱子
 struct Box {
@@ -175,7 +181,10 @@ fn setup(
                         })
                         .with(Timer::from_seconds(0.1))
                         .with(pos.clone())
-                        .with(Player {});
+                        .with(Player {
+                            name: "player".to_string(),
+                            step: 0,
+                        });
                 }
                 "B" => {
                     commands
@@ -273,14 +282,14 @@ fn position_system(mut query: Query<(&mut Position, &mut Translation)>) {
 fn player_movement_system(
     time: Res<Time>,
     input: Res<Input<KeyCode>>,
-    mut player: Query<(&mut Position, &Player)>,
+    mut player: Query<(&mut Position, &mut Player)>,
     mut immovable: Query<(&Position, &Immovable)>,
     mut moveable: Query<(&mut Position, &Movable)>,
     // mut camera: Query<(&mut Translation, &Camera)>,
 ) {
     let _delta_seconds = f32::min(0.2, time.delta_seconds);
 
-    for (mut pos, _) in &mut player.iter() {
+    for (mut pos, mut per) in &mut player.iter() {
         let mut vol = Position { x: 0.0, y: 0.0 };
 
         if input.just_released(KeyCode::Up) {
@@ -332,6 +341,8 @@ fn player_movement_system(
             // 移动
             pos.x = pos.x + vol.x;
             pos.y = pos.y + vol.y;
+            per.step += 1;
+            println!("{} {}", per.name, per.step);
         }
 
         // 镜头跟随用户 camera follow the player
@@ -381,11 +392,12 @@ fn main() {
             ..Default::default()
         })
         .add_default_plugins()
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_resource(ClearColor(Color::rgb(0.7, 0.7, 0.7)))
         .add_startup_system(setup.system())
         .add_system_to_stage(stage::FIRST, camera_system.system())
         .add_system(animate_sprite_system.system())
-        .add_system(player_movement_system.system())
+        .add_system_to_stage(stage::EVENT_UPDATE, player_movement_system.system())
         .add_system(box_spot_system.system())
         .add_system(position_system.system())
         .add_system(scoreboard_system.system())
