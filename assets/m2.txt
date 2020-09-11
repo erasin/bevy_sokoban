@@ -1,9 +1,9 @@
 N N W W W W W W
 W W W . . . . W
-W . . . B . . W
 W . . . . . . W
-W . P . . S . W
-W . . B . . . W
-W . . S . . . W
+W . . . . . . W
+W . P B B . S W
+W . . . . S . W
+W . . . . . . W
 W . . . . . . W
 W W W W W W W W

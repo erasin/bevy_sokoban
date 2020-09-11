@@ -1,7 +1,13 @@
 use bevy::{
-    diagnostic::FrameTimeDiagnosticsPlugin, math::vec2, prelude::*, render::camera::Camera,
+    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
+    math::vec2,
+    prelude::*,
+    render::camera::Camera,
     render::pass::ClearColor,
 };
+
+use std::fs::File;
+use std::io::{BufReader, Read};
 
 const TILED_WIDTH: f32 = 32.0;
 const SCALE: f32 = 2.0;
@@ -104,24 +110,35 @@ fn setup(
             translation: Translation(Vec3::new(0.0, 0.0, 0.0)),
             sprite: Sprite {
                 size: Vec2::new(50.0, 50.0),
+                resize_mode: SpriteResizeMode::Manual,
             },
             ..Default::default()
         });
+    // .spawn(TextComponents {
+    //     style: Style {
+    //         align_self: AlignSelf::FlexEnd,
+    //         ..Default::default()
+    //     },
+    //     text: Text {
+    //         value: "FPS:".to_string(),
+    //         font: font_ui,
+    //         style: TextStyle {
+    //             font_size: 60.0,
+    //             color: Color::WHITE,
+    //         },
+    //     },
+    //     ..Default::default()
+    // });
+
+    // @bug: TextComponents && SpriteComponents
 
     // 地图加载
-    let map_string: &str = std::include_str!("../assets/m1.txt");
-
-    // let map_string: &str = "
-    //     N N W W W W W W
-    //     W W W . . . . W
-    //     W . . . B . . W
-    //     W . . . . . . W
-    //     W . P . . . . W
-    //     W . . . . . . W
-    //     W . . S . . . W
-    //     W . . . . . . W
-    //     W W W W W W W W
-    //     ";
+    // let map_string: &str = std::include_str!("../assets/m3.txt");
+    let map_file = env::var("MAP").unwrap_or("./assets/m1.txt".to_string());
+    let mut map_string = String::new();
+    let file = File::open(map_file).unwrap();
+    let mut reader = BufReader::new(file);
+    reader.read_to_string(&mut map_string).unwrap();
 
     let rows: Vec<&str> = map_string.trim().split('\n').map(|x| x.trim()).collect();
 
@@ -179,7 +196,7 @@ fn setup(
                             translation: Translation::new(0.0, 0.0, 1.0),
                             ..Default::default()
                         })
-                        .with(Timer::from_seconds(0.1))
+                        .with(Timer::from_seconds(0.1, true))
                         .with(pos.clone())
                         .with(Player {
                             name: "player".to_string(),
@@ -205,7 +222,7 @@ fn setup(
                             translation: Translation::new(0.0, 0.0, 1.0),
                             ..Default::default()
                         })
-                        .with(Timer::from_seconds(0.5))
+                        .with(Timer::from_seconds(0.5, true))
                         .with(pos.clone())
                         .with(Box {
                             sprite_ok: (texture_atlas_sheet, 4),
@@ -241,6 +258,16 @@ fn setup(
     }
 
     // clamp the timestep to stop the ball from escaping when the game starts
+}
+
+fn fps_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>) {
+    for mut text in &mut query.iter() {
+        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+            if let Some(average) = fps.average() {
+                text.value = format!("FPS: {:.2}", average);
+            }
+        }
+    }
 }
 
 // 镜头处理
@@ -307,13 +334,11 @@ fn player_movement_system(
 
         // 下个位置
         let mut p2 = pos.clone();
-        p2.x = p2.x + vol.x;
-        p2.y = p2.y + vol.y;
+        p2 = p2 + vol;
 
         // 下下位置
         let mut p3 = pos.clone();
-        p3.x = p2.x + vol.x;
-        p3.y = p2.y + vol.y;
+        p3 = p3 + vol;
 
         let mut p3_move = true;
 
@@ -330,8 +355,7 @@ fn player_movement_system(
             for (mut pos_mo, _) in &mut moveable.iter() {
                 if pos_mo.x == p2.x && pos_mo.y == p2.y {
                     if p3_move {
-                        pos_mo.x = pos_mo.x + vol.x;
-                        pos_mo.y = pos_mo.y + vol.y;
+                        *pos_mo = *pos_mo + vol;
                     } else {
                         vol = Position { x: 0.0, y: 0.0 };
                     }
@@ -339,8 +363,7 @@ fn player_movement_system(
             }
 
             // 移动
-            pos.x = pos.x + vol.x;
-            pos.y = pos.y + vol.y;
+            *pos = *pos + vol;
             per.step += 1;
             println!("{} {}", per.name, per.step);
         }
@@ -353,8 +376,11 @@ fn player_movement_system(
     }
 }
 
+// 完成处理
 fn box_spot_system(
+    mut commands: Commands,
     mut box_entity: Query<(
+        Entity,
         &Position,
         &Box,
         &mut TextureAtlasSprite,
@@ -363,8 +389,10 @@ fn box_spot_system(
     mut spot_entity: Query<(&Position, &BoxSpot)>,
 ) {
     for (ps, _) in &mut spot_entity.iter() {
-        for (pb, b, mut sprite, mut texture) in &mut box_entity.iter() {
+        for (e, pb, b, mut sprite, mut texture) in &mut box_entity.iter() {
             if ps.x == pb.x && ps.y == pb.y {
+                commands.remove_one::<Movable>(e);
+                commands.insert_one(e, Immovable);
                 sprite.index = b.sprite_ok.1;
                 *texture = b.sprite_ok.0;
             }
@@ -380,7 +408,10 @@ fn event_listener_system(time: Res<Time>) {
     let _delta_seconds = f32::min(0.2, time.delta_seconds);
 }
 
+use std::env;
+
 fn main() {
+    dotenv::dotenv().ok();
     App::build()
         .add_resource(WindowDescriptor {
             title: "sokoban!".to_string(),
@@ -402,5 +433,6 @@ fn main() {
         .add_system(position_system.system())
         .add_system(scoreboard_system.system())
         .add_system(event_listener_system.system())
+        .add_system(fps_update_system.system())
         .run();
 }
