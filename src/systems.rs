@@ -1,18 +1,19 @@
+use crate::components::*;
+use crate::events::*;
+use crate::resources::*;
+use crate::{SCALE, TILED_WIDTH};
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     math::vec2,
     prelude::*,
     render::camera::Camera,
 };
-
-use crate::comments::*;
-use crate::{SCALE, TILED_WIDTH};
 use std::collections::HashMap;
 use std::collections::HashSet;
 
 /// fsp 显示
-pub fn fps_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>) {
-    for mut text in &mut query.iter() {
+pub fn fps_update_system(diagnostics: Res<Diagnostics>, mut query: Query<(&mut Text, &UIFPS)>) {
+    for (mut text, _) in &mut query.iter() {
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {
                 text.value = format!("FPS: {:.2}", average);
@@ -22,10 +23,13 @@ pub fn fps_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Te
 }
 
 /// 镜头处理
-pub fn camera_system(mut query: Query<(&Camera, &mut Translation)>) {
+pub fn camera_system(map: Res<Map>, mut query: Query<(&Camera, &mut Translation)>) {
+    let height = map.height as f32 * TILED_WIDTH * SCALE;
+    let width = map.width as f32 * TILED_WIDTH * SCALE;
+
     for (_, mut trans) in &mut query.iter() {
-        trans.0.set_x(300.0);
-        trans.0.set_y(300.0);
+        trans.0.set_x(height / 2.0);
+        trans.0.set_y(width / 2.0);
     }
 }
 
@@ -63,6 +67,7 @@ pub fn position_system(mut query: Query<(&mut Position, &mut Translation)>) {
 pub fn player_movement_system(
     // time: Res<Time>,
     input: Res<Input<KeyCode>>,
+    map: Res<Map>,
     mut player_query: Query<(Entity, &mut Position, &mut Player)>,
     mut immovable_query: Query<(Entity, &Position, &Immovable)>,
     mut moveable_query: Query<Without<Player, (Entity, &mut Position, &Movable)>>,
@@ -85,11 +90,11 @@ pub fn player_movement_system(
         vol.x = -1;
     }
 
-    println!("1 {:?} ", vol);
+    // println!("1 {:?} ", vol);
     if vol == Position::default() {
         return;
     }
-    println!("2 {:?}", vol);
+    // println!("2 {:?}", vol);
 
     // 移动链对象
     let mut to_move = HashSet::new();
@@ -114,19 +119,19 @@ pub fn player_movement_system(
         // 移动方向链存储器
         let (start, end, is_x) = match vol {
             Position { x: 0, y } => {
-                let len = if y > 0 { 10 } else { 0 };
+                let len = if y > 0 { map.height as i32 } else { 0 };
                 ((pos.y + y) as i32, len, false)
             }
             Position { x, y: 0 } => {
-                let len = if x > 0 { 10 } else { 0 };
+                let len = if x > 0 { map.width as i32 } else { 0 };
                 ((pos.x + x) as i32, len, true)
             }
             _ => (0, 0, false),
         };
 
-        println!("4 {:?} ", vol);
+        // println!("4 {:?} ", vol);
 
-        println!("3 {} {} {}", start, end, is_x);
+        // println!("3 {} {} {}", start, end, is_x);
 
         // 缓存
         let range = if start < end {
@@ -138,7 +143,7 @@ pub fn player_movement_system(
         for x_y in range {
             let p2 = if is_x { (x_y, pos.y) } else { (pos.x, x_y) };
 
-            println!("5 -> {:?} ", p2);
+            // println!("5 -> {:?} ", p2);
 
             match mov.get(&p2) {
                 Some(id) => to_move.insert(*id),
@@ -157,7 +162,7 @@ pub fn player_movement_system(
         if to_move.remove(&entity.id()) {
             *pos = *pos + vol;
             per.step += 1;
-            println!("{} {}", per.name, per.step);
+            // println!("{} {}", per.name, per.step);
         }
     }
 
@@ -172,6 +177,7 @@ pub fn player_movement_system(
 // 完成处理
 pub fn box_spot_system(
     mut commands: Commands,
+    mut events: ResMut<Events<MyEvent>>,
     mut box_entity: Query<(
         Entity,
         &Position,
@@ -179,15 +185,19 @@ pub fn box_spot_system(
         &mut TextureAtlasSprite,
         &mut Handle<TextureAtlas>,
     )>,
-    mut spot_entity: Query<(&Position, &BoxSpot)>,
+    mut spot_entity: Query<(&Position, &mut BoxSpot)>,
 ) {
-    for (ps, _) in &mut spot_entity.iter() {
-        for (e, pb, b, mut sprite, mut texture) in &mut box_entity.iter() {
-            if ps == pb {
-                // commands.insert_one(e, Immovable);
-                // commands.remove_one::<Movable>(e);
-                sprite.index = b.sprite_ok.1;
-                *texture = b.sprite_ok.0;
+    for (ps, mut pse) in &mut spot_entity.iter() {
+        if !pse.ok {
+            for (e, pb, b, mut sprite, mut texture) in &mut box_entity.iter() {
+                if ps == pb {
+                    commands.insert_one(e, Immovable);
+                    commands.remove_one::<Movable>(e);
+                    sprite.index = b.sprite_ok.1;
+                    *texture = b.sprite_ok.0;
+                    pse.ok = true;
+                    events.send(MyEvent::new(pb.x, pb.y));
+                }
             }
         }
     }
@@ -199,6 +209,69 @@ pub fn scoreboard_system(time: Res<Time>) {
 }
 
 /// 事件监听
-pub fn event_listener_system(time: Res<Time>) {
+pub fn event_listener_system(
+    time: Res<Time>,
+    mut state: ResMut<MyEventListenerState>,
+    events: Res<Events<MyEvent>>,
+) {
     let _delta_seconds = f32::min(0.2, time.delta_seconds);
+
+    for ev in state.reader.iter(&events) {
+        // do something with `ev`
+        println!("my event, {:?}", ev);
+    }
+}
+
+// change map
+pub fn map_system(mut commands: Commands, mut map: ResMut<Map>, input: Res<Input<KeyCode>>) {
+    let mut map_file = "";
+    if input.just_released(KeyCode::Key1) {
+        map_file = "./assets/m1.txt";
+    }
+    if input.just_released(KeyCode::Key2) {
+        map_file = "./assets/m2.txt";
+    }
+    if input.just_released(KeyCode::Key3) {
+        map_file = "./assets/m3.txt";
+    }
+    if input.just_released(KeyCode::Key4) {
+        map_file = "./assets/m4.txt";
+    }
+    if !map_file.is_empty() {
+        println!("{}", map_file);
+        *map = Map::load(map_file).unwrap();
+        map.render(&mut commands);
+    }
+}
+
+pub fn button_system(
+    button_materials: Res<ButtonMaterials>,
+    mut interaction_query: Query<(
+        &Button,
+        Mutated<Interaction>,
+        &mut Handle<ColorMaterial>,
+        &Children,
+        &UIBTN,
+    )>,
+    text_query: Query<&mut Text>,
+) {
+    for (_button, interaction, mut material, children, _) in &mut interaction_query.iter() {
+        let mut text = text_query.get_mut::<Text>(children[0]).unwrap();
+        match *interaction {
+            Interaction::Clicked => {
+                text.value = "Press".to_string();
+                *material = button_materials.pressed;
+                println!("Press ok")
+                // load map
+            }
+            Interaction::Hovered => {
+                text.value = "Hover".to_string();
+                *material = button_materials.hovered;
+            }
+            Interaction::None => {
+                text.value = "Button".to_string();
+                *material = button_materials.normal;
+            }
+        }
+    }
 }

@@ -1,8 +1,8 @@
-N N W W W N N N N
-N N W S W N N N N
-N N W . W W W W W
+- - W W W - - - -
+- - W S W - - - -
+- - W . W W W W W
 W W W B . B . S W
 W S . B P W W W W
-W W W W B W N N N
-N N N W S W N N N
-N N N W W W N N N
+W W W W B W - - -
+- - - W S W - - -
+- - - W W W - - -

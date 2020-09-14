@@ -13,7 +13,9 @@ pub struct Box {
 }
 
 /// 目标点
-pub struct BoxSpot {}
+pub struct BoxSpot {
+    pub ok: bool,
+}
 
 /// 石头
 // struct Stone {}
@@ -57,3 +59,6 @@ impl Sub for Position {
         }
     }
 }
+
+pub struct UIFPS;
+pub struct UIBTN;

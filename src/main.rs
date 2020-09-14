@@ -1,8 +1,12 @@
-mod comments;
+mod components;
+mod events;
+mod resources;
 mod setup;
 mod systems;
 
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, render::pass::ClearColor};
+use events::*;
+use resources::*;
 use setup::setup;
 use systems::*;
 
@@ -24,6 +28,10 @@ fn main() {
             ..Default::default()
         })
         .add_default_plugins()
+        .init_resource::<Map>()
+        .init_resource::<ButtonMaterials>()
+        .add_event::<MyEvent>()
+        .init_resource::<MyEventListenerState>()
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_resource(ClearColor(Color::rgb(0.7, 0.7, 0.7)))
         .add_startup_system(setup.system())
@@ -35,5 +43,7 @@ fn main() {
         .add_system(scoreboard_system.system())
         .add_system(event_listener_system.system())
         .add_system(fps_update_system.system())
+        .add_system(button_system.system())
+        .add_system(map_system.system())
         .run();
 }

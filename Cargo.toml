@@ -9,3 +9,4 @@ edition = "2018"
 bevy = { path = "/Users/erasin/Development/rust/game/bevy" }
 rand = "0.7"
 dotenv = "0.15"
+anyhow = "1"
