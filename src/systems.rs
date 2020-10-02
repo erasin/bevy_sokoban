@@ -23,20 +23,20 @@ pub fn fps_update_system(diagnostics: Res<Diagnostics>, mut query: Query<(&mut T
 }
 
 /// 镜头处理
-pub fn camera_system(map: Res<Map>, mut query: Query<(&Camera, &mut Translation)>) {
+pub fn camera_system(map: Res<Map>, mut query: Query<(&Camera, &mut Transform)>) {
     let height = map.height as f32 * TILED_WIDTH * SCALE;
     let width = map.width as f32 * TILED_WIDTH * SCALE;
 
     for (_, mut trans) in &mut query.iter() {
-        trans.0.set_x(height / 2.0);
-        trans.0.set_y(width / 2.0);
+        // 相机 z 高度位置需要高于要显示的对象
+        trans.set_translation(Vec3::new(height / 2.0, width / 2.0, 2.0));
     }
 }
 
 /// 动画效果
 pub fn animate_sprite_system(
     texture_atlases: Res<Assets<TextureAtlas>>,
-    mut query: Query<(&mut Timer, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
+    mut query: Query<With<Player, (&mut Timer, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>>,
 ) {
     for (mut timer, mut sprite, texture_atlas_handle) in &mut query.iter() {
         if timer.finished {
@@ -48,9 +48,10 @@ pub fn animate_sprite_system(
 }
 
 /// 坐标转化
-pub fn position_system(mut query: Query<(&mut Position, &mut Translation)>) {
+pub fn position_system(mut query: Query<(&mut Position, &mut Transform)>) {
     for (pos, mut trans) in &mut query.iter() {
-        let start = vec2(trans.0.x(), trans.0.y());
+        let t = trans.translation();
+        let start = vec2(t.x(), t.y());
         let end = start.lerp(
             vec2(
                 pos.x as f32 * SCALE * TILED_WIDTH,
@@ -58,8 +59,7 @@ pub fn position_system(mut query: Query<(&mut Position, &mut Translation)>) {
             ),
             0.35,
         );
-        trans.0.set_x(end.x());
-        trans.0.set_y(end.y());
+        trans.set_translation(Vec3::new(end.x(), end.y(), t.z()))
     }
 }
 
@@ -103,14 +103,14 @@ pub fn player_movement_system(
         to_move.insert(entity.id());
 
         // 所有可移动
-        let mov: HashMap<(i32, i32), u128> = moveable_query
+        let mov: HashMap<(i32, i32), u32> = moveable_query
             .iter()
             .iter()
             .map(|t| ((t.1.x, t.1.y), t.0.id()))
             .collect::<HashMap<_, _>>();
 
         // 所有不可移动
-        let immvo: HashMap<(i32, i32), u128> = immovable_query
+        let immvo: HashMap<(i32, i32), u32> = immovable_query
             .iter()
             .iter()
             .map(|t| ((t.1.x, t.1.y), t.0.id()))

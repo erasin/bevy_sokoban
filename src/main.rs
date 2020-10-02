@@ -33,7 +33,7 @@ fn main() {
         .add_event::<MyEvent>()
         .init_resource::<MyEventListenerState>()
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_resource(ClearColor(Color::rgb(0.7, 0.7, 0.7)))
+        .add_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .add_startup_system(setup.system())
         .add_system_to_stage(stage::FIRST, camera_system.system())
         .add_system(animate_sprite_system.system())

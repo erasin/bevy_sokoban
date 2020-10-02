@@ -70,7 +70,7 @@ impl Map {
                         commands
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_sheet,
-                                scale: Scale(SCALE),
+                                transform: Transform::from_scale(SCALE),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -82,9 +82,9 @@ impl Map {
                         commands
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_sheet,
-                                scale: Scale(SCALE),
+                                transform: Transform::from_scale(SCALE)
+                                    .with_translation(Vec3::new(0.0, 0.0, 1.0)),
                                 sprite: TextureAtlasSprite::new(3),
-                                translation: Translation::new(0.0, 0.0, 1.0),
                                 ..Default::default()
                             })
                             .with(pos)
@@ -96,7 +96,7 @@ impl Map {
                             // floor
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_sheet,
-                                scale: Scale(SCALE),
+                                transform: Transform::from_scale(SCALE),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -105,8 +105,8 @@ impl Map {
                             // player
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_player,
-                                scale: Scale(SCALE),
-                                translation: Translation::new(0.0, 0.0, 1.0),
+                                transform: Transform::from_scale(SCALE)
+                                    .with_translation(Vec3::new(0.0, 0.0, 1.0)),
                                 ..Default::default()
                             })
                             .with(Timer::from_seconds(0.1, true))
@@ -121,7 +121,7 @@ impl Map {
                             // floor
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_sheet,
-                                scale: Scale(SCALE),
+                                transform: Transform::from_scale(SCALE),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -130,9 +130,8 @@ impl Map {
                             // box
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_box_blue,
-                                scale: Scale(SCALE),
-                                // sprite: TextureAtlasSprite::new(4),
-                                translation: Translation::new(0.0, 0.0, 1.0),
+                                transform: Transform::from_scale(SCALE)
+                                    .with_translation(Vec3::new(0.0, 0.0, 2.0)),
                                 ..Default::default()
                             })
                             .with(Timer::from_seconds(0.5, true))
@@ -147,7 +146,7 @@ impl Map {
                             // floor
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_sheet,
-                                scale: Scale(SCALE),
+                                transform: Transform::from_scale(SCALE),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -156,9 +155,9 @@ impl Map {
                             // box spot
                             .spawn(SpriteSheetComponents {
                                 texture_atlas: self.texture_atlas_sheet,
-                                scale: Scale(SCALE),
                                 sprite: TextureAtlasSprite::new(2),
-                                translation: Translation::new(0.0, 0.0, 0.1),
+                                transform: Transform::from_scale(SCALE)
+                                    .with_translation(Vec3::new(0.0, 0.0, 0.1)),
                                 ..Default::default()
                             })
                             .with(pos)

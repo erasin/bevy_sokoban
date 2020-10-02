@@ -43,15 +43,14 @@ pub fn setup(
     commands
         .spawn(Camera2dComponents::default())
         .spawn(UiCameraComponents::default())
-        // .spawn(SpriteComponents {
-        //     material: materials.add(Color::rgb(1.0, 1.0, 1.0).into()),
-        //     translation: Translation(Vec3::new(0.0, 0.0, 0.0)),
-        //     sprite: Sprite {
-        //         size: Vec2::new(50.0, 50.0),
-        //         resize_mode: SpriteResizeMode::Manual,
-        //     },
-        //     ..Default::default()
-        // })
+        .spawn(SpriteComponents {
+            material: materials.add(Color::rgb(1.0, 1.0, 1.0).into()),
+            sprite: Sprite {
+                size: Vec2::new(50.0, 50.0),
+                resize_mode: SpriteResizeMode::Manual,
+            },
+            ..Default::default()
+        })
         .spawn(ButtonComponents {
             style: Style {
                 size: Size::new(Val::Px(150.0), Val::Px(65.0)),
@@ -79,45 +78,44 @@ pub fn setup(
                 },
                 ..Default::default()
             });
+        })
+        .spawn(NodeComponents {
+            style: Style {
+                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            material: materials.add(Color::rgba(0.04, 0.04, 0.04, 0.0).into()),
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn(NodeComponents {
+                    style: Style {
+                        size: Size::new(Val::Px(80.0), Val::Px(80.0)),
+                        ..Default::default()
+                    },
+                    material: materials.add(Color::rgb(0.08, 0.08, 1.0).into()),
+                    ..Default::default()
+                })
+                .spawn(TextComponents {
+                    style: Style {
+                        size: Size::new(Val::Px(80.0), Val::Px(80.0)),
+                        ..Default::default()
+                    },
+                    text: Text {
+                        value: "FPS:".to_string(),
+                        font: ui_font,
+                        style: TextStyle {
+                            font_size: 60.0,
+                            color: Color::WHITE,
+                        },
+                    },
+                    ..Default::default()
+                })
+                .with(UIFPS);
         });
-    // .spawn(NodeComponents {
-    //     style: Style {
-    //         size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-    //         justify_content: JustifyContent::Center,
-    //         align_items: AlignItems::Center,
-    //         ..Default::default()
-    //     },
-    //     material: materials.add(Color::rgba(0.04, 0.04, 0.04, 0.0).into()),
-    //     ..Default::default()
-    // })
-    // .with_children(|parent| {
-    //     parent
-    // .spawn(NodeComponents {
-    //     style: Style {
-    //         size: Size::new(Val::Px(80.0), Val::Px(80.0)),
-    //         ..Default::default()
-    //     },
-    //     material: materials.add(Color::rgb(0.08, 0.08, 1.0).into()),
-    //     ..Default::default()
-    // })
-
-    // .spawn(TextComponents {
-    //     style: Style {
-    //         size: Size::new(Val::Px(80.0), Val::Px(80.0)),
-    //         ..Default::default()
-    //     },
-    //     text: Text {
-    //         value: "FPS:".to_string(),
-    //         font: ui_font,
-    //         style: TextStyle {
-    //             font_size: 60.0,
-    //             color: Color::WHITE,
-    //         },
-    //     },
-    //     ..Default::default()
-    // })
-    // .with(UIFPS);
-    // });
 
     // @bug: TextComponents && SpriteComponents
 
@@ -144,7 +142,7 @@ pub fn setup(
         let j = i as f32;
         commands.spawn(SpriteComponents {
             material: line_color,
-            translation: Translation(Vec3::new(def_width * j, 0.0, 0.0)),
+            transform: Transform::from_translation(Vec3::new(def_width * j, 0.0, 0.0)),
             sprite: Sprite {
                 size: Vec2::new(2.0, bounds.y()),
                 resize_mode: SpriteResizeMode::Automatic,
@@ -157,7 +155,7 @@ pub fn setup(
         let j = i as f32;
         commands.spawn(SpriteComponents {
             material: line_color,
-            translation: Translation(Vec3::new(0.0, def_width * j, 0.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, def_width * j, 0.0)),
             sprite: Sprite {
                 size: Vec2::new(bounds.x(), 2.0),
                 resize_mode: SpriteResizeMode::Automatic,
