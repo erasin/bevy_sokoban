@@ -51,34 +51,6 @@ pub fn setup(
             },
             ..Default::default()
         })
-        .spawn(ButtonComponents {
-            style: Style {
-                size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                // center button
-                margin: Rect::all(Val::Auto),
-                // horizontally center child text
-                justify_content: JustifyContent::Center,
-                // vertically center child text
-                align_items: AlignItems::Center,
-                ..Default::default()
-            },
-            material: button_materials.normal,
-            ..Default::default()
-        })
-        .with(UIBTN)
-        .with_children(|parent| {
-            parent.spawn(TextComponents {
-                text: Text {
-                    value: "Button".to_string(),
-                    font: ui_font,
-                    style: TextStyle {
-                        font_size: 40.0,
-                        color: Color::rgb(0.8, 0.8, 0.8),
-                    },
-                },
-                ..Default::default()
-            });
-        })
         .spawn(NodeComponents {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
@@ -91,6 +63,34 @@ pub fn setup(
         })
         .with_children(|parent| {
             parent
+                .spawn(ButtonComponents {
+                    style: Style {
+                        size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                        // center button
+                        margin: Rect::all(Val::Auto),
+                        // horizontally center child text
+                        justify_content: JustifyContent::Center,
+                        // vertically center child text
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    material: button_materials.normal,
+                    ..Default::default()
+                })
+                .with(UIBTN)
+                .with_children(|parent| {
+                    parent.spawn(TextComponents {
+                        text: Text {
+                            value: "Button".to_string(),
+                            font: ui_font,
+                            style: TextStyle {
+                                font_size: 40.0,
+                                color: Color::rgb(0.8, 0.8, 0.8),
+                            },
+                        },
+                        ..Default::default()
+                    });
+                })
                 .spawn(NodeComponents {
                     style: Style {
                         size: Size::new(Val::Px(80.0), Val::Px(80.0)),
