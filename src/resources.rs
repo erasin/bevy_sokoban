@@ -1,186 +1,70 @@
-use crate::components::*;
-use crate::SCALE;
 use bevy::prelude::*;
-use std::fs::File;
-use std::io::{BufReader, Read};
-use std::path::Path;
 
-#[derive(Debug, Default)]
-pub struct Map {
-    pub height: usize,
-    pub width: usize,
-    tides: Vec<Vec<String>>,
-    texture_atlas_sheet: Handle<TextureAtlas>,
-    texture_atlas_player: Handle<TextureAtlas>,
-    texture_atlas_box_blue: Handle<TextureAtlas>,
+pub struct ResourceLocal {
+    pub texture_atlas_sheet: Handle<TextureAtlas>,
+    pub texture_atlas_player: Handle<TextureAtlas>,
+    pub texture_atlas_box_blue: Handle<TextureAtlas>,
+    pub ui_font: Handle<Font>,
+    pub music_wall: Handle<AudioSource>,
 }
 
-impl Map {
-    /// 加载
-    pub fn load<P: AsRef<Path>>(filepath: P) -> anyhow::Result<Self> {
-        let mut map_string = String::new();
-        let file = File::open(filepath)?;
-        // file.read_to_string(buf)
-        let mut reader = BufReader::new(file);
-        reader.read_to_string(&mut map_string).unwrap();
+#[derive(Default)]
+pub struct ResourcePlugin;
 
-        let rows: Vec<Vec<String>> = map_string
-            .trim()
-            .split("\n")
-            .map(|x| x.trim().split(' ').map(|y| y.to_string()).collect())
-            .collect();
-
-        let mut map = Map::default();
-        // {
-        //     ..Default::default()
-        // };
-
-        map.tides = rows.clone();
-        map.height = rows.len();
-        if map.height > 0 {
-            map.width = rows[0].len();
-        }
-
-        Ok(map)
-    }
-    pub fn set_atlas(
-        &mut self,
-        texture_atlas_sheet: Handle<TextureAtlas>,
-        texture_atlas_player: Handle<TextureAtlas>,
-        texture_atlas_box_blue: Handle<TextureAtlas>,
-    ) {
-        self.texture_atlas_sheet = texture_atlas_sheet;
-        self.texture_atlas_player = texture_atlas_player;
-        self.texture_atlas_box_blue = texture_atlas_box_blue;
-    }
-
-    /// 渲染处理
-    pub fn render(&self, commands: &mut Commands) {
-        for (y, row) in self.tides.iter().rev().enumerate() {
-            for (x, column) in row.iter().enumerate() {
-                let pos = Position {
-                    x: x as i32,
-                    y: y as i32,
-                };
-
-                // 0 player 1 floor 2 spot 3 wall 4 box
-                match column.as_str() {
-                    "." => {
-                        // floor
-                        commands
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
-                                sprite: TextureAtlasSprite::new(1),
-                                ..Default::default()
-                            })
-                            .with(pos.clone())
-                            .with(Floor {});
-                    }
-                    "W" => {
-                        // wall
-                        commands
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 1.0)),
-                                sprite: TextureAtlasSprite::new(3),
-                                ..Default::default()
-                            })
-                            .with(pos)
-                            .with(Wall {})
-                            .with(Immovable);
-                    }
-                    "P" => {
-                        commands
-                            // floor
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
-                                sprite: TextureAtlasSprite::new(1),
-                                ..Default::default()
-                            })
-                            .with(pos.clone())
-                            .with(Floor {})
-                            // player
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_player,
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 1.0)),
-                                ..Default::default()
-                            })
-                            .with(Timer::from_seconds(0.1, true))
-                            .with(pos.clone())
-                            .with(Player {
-                                name: "player".to_string(),
-                                step: 0,
-                            });
-                    }
-                    "B" => {
-                        commands
-                            // floor
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
-                                sprite: TextureAtlasSprite::new(1),
-                                ..Default::default()
-                            })
-                            .with(pos.clone())
-                            .with(Floor {})
-                            // box
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_box_blue,
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 2.0)),
-                                ..Default::default()
-                            })
-                            .with(Timer::from_seconds(0.5, true))
-                            .with(pos.clone())
-                            .with(Box {
-                                sprite_ok: (self.texture_atlas_sheet, 4),
-                            })
-                            .with(Movable);
-                    }
-                    "S" => {
-                        commands
-                            // floor
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
-                                sprite: TextureAtlasSprite::new(1),
-                                ..Default::default()
-                            })
-                            .with(pos.clone())
-                            .with(Floor {})
-                            // box spot
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: self.texture_atlas_sheet,
-                                sprite: TextureAtlasSprite::new(2),
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 0.1)),
-                                ..Default::default()
-                            })
-                            .with(pos)
-                            .with(BoxSpot { ok: false });
-                    }
-                    "-" => (),
-                    c => panic!("unrecognized map item {}", c),
-                }
-            }
-        }
+impl Plugin for ResourcePlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.add_startup_stage_before(bevy::app::startup_stage::STARTUP, "INITRES");
+        app.add_startup_system_to_stage("INITRES", setup_system.system());
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::Map;
+fn setup_system(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut textures: ResMut<Assets<Texture>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    // mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    println!("setup res");
+    // sheet
+    let texture_handle = asset_server
+        .load_sync(&mut textures, "assets/textures/sheet.png")
+        .unwrap();
+    let texture = textures.get(&texture_handle).unwrap();
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, texture.size, 5, 1);
+    let texture_atlas_sheet = texture_atlases.add(texture_atlas);
+    // 0 player 1 floor 2 spot 3 wall 4 box
 
-    #[test]
-    fn test_map_load() {
-        let m = Map::load("assets/m3.txt").unwrap();
-        assert_eq!(m.height, 8);
-        assert_eq!(m.width, 9);
-    }
+    // player
+    let texture_handle = asset_server
+        .load_sync(&mut textures, "assets/textures/player_sheet.png")
+        .unwrap();
+    let texture = textures.get(&texture_handle).unwrap();
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, texture.size, 3, 1);
+    let texture_atlas_player = texture_atlases.add(texture_atlas);
+
+    // blue box
+    let texture_handle = asset_server
+        .load_sync(&mut textures, "assets/textures/box_blue_sheet.png")
+        .unwrap();
+    let texture = textures.get(&texture_handle).unwrap();
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, texture.size, 2, 1);
+    let texture_atlas_box_blue = texture_atlases.add(texture_atlas);
+
+    // 字体
+    let ui_font = asset_server.load("assets/fonts/KenneyFuture.ttf").unwrap();
+
+    let music_wall = asset_server.load("assets/sounds/wall.mp3").unwrap();
+
+    let resource = ResourceLocal {
+        texture_atlas_sheet,
+        texture_atlas_player,
+        texture_atlas_box_blue,
+        ui_font,
+        music_wall,
+    };
+
+    commands.insert_resource(resource);
 }
 
 pub struct ButtonMaterials {

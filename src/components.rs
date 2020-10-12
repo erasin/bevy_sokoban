@@ -21,10 +21,10 @@ pub struct BoxSpot {
 // struct Stone {}
 
 /// 墙
-pub struct Wall {}
+pub struct Wall;
 
 // 地板
-pub struct Floor {}
+pub struct Floor;
 
 pub struct Movable;
 
@@ -59,6 +59,3 @@ impl Sub for Position {
         }
     }
 }
-
-pub struct UIFPS;
-pub struct UIBTN;

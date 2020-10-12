@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 #bevy = "0.2"
-bevy = { git = "https://github.com/bevyengine/bevy" }
+bevy = { git = "https://github.com/bevyengine/bevy", features = ["default", "wav"] }
 rand = "0.7"
 dotenv = "0.15"
 anyhow = "1"

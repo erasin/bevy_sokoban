@@ -14,13 +14,16 @@ pub struct MyEventListenerState {
     pub reader: EventReader<MyEvent>,
 }
 
-// fn my_recv_system(mut state: ResMut<MyState>, events: Res<Events<MyEvent>>) {
-//     for ev in state.reader.iter(&events) {
-//         // do something with `ev`
-//         println!("event")
-//     }
-// }
+/// 事件监听
+pub fn event_listener_system(
+    time: Res<Time>,
+    mut state: ResMut<MyEventListenerState>,
+    events: Res<Events<MyEvent>>,
+) {
+    let _delta_seconds = f32::min(0.2, time.delta_seconds);
 
-// fn my_send_system(mut events: ResMut<Events<MyEvent>>) {
-//     events.send(MyEvent);
-// }
+    for ev in state.reader.iter(&events) {
+        // do something with `ev`
+        println!("my event, {:?}", ev);
+    }
+}

@@ -1,5 +1,6 @@
 use crate::components::*;
 use crate::events::*;
+use crate::map::*;
 use crate::resources::*;
 use crate::{SCALE, TILED_WIDTH};
 use bevy::{
@@ -11,27 +12,16 @@ use bevy::{
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-/// fsp 显示
-pub fn fps_update_system(diagnostics: Res<Diagnostics>, mut query: Query<(&mut Text, &UIFPS)>) {
-    for (mut text, _) in &mut query.iter() {
-        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
-            if let Some(average) = fps.average() {
-                text.value = format!("FPS: {:.2}", average);
-            }
-        }
-    }
-}
-
 /// 镜头处理
-pub fn camera_system(map: Res<Map>, mut query: Query<(&Camera, &mut Transform)>) {
-    let height = map.height as f32 * TILED_WIDTH * SCALE;
-    let width = map.width as f32 * TILED_WIDTH * SCALE;
+// pub fn camera_system(map: Res<Map>, mut query: Query<(&Camera, &mut Transform)>) {
+//     let height = map.height as f32 * TILED_WIDTH * SCALE;
+//     let width = map.width as f32 * TILED_WIDTH * SCALE;
 
-    for (_, mut trans) in &mut query.iter() {
-        // 相机 z 高度位置需要高于要显示的对象
-        trans.set_translation(Vec3::new(height / 2.0, width / 2.0, 2.0));
-    }
-}
+//     for (_, mut trans) in &mut query.iter() {
+//         // 相机 z 高度位置需要高于要显示的对象
+//         trans.set_translation(Vec3::new(height / 2.0, width / 2.0, 2.0));
+//     }
+// }
 
 /// 动画效果
 pub fn animate_sprite_system(
@@ -48,14 +38,20 @@ pub fn animate_sprite_system(
 }
 
 /// 坐标转化
-pub fn position_system(mut query: Query<(&mut Position, &mut Transform)>) {
+pub fn position_system(map: Res<Map>, mut query: Query<(&mut Position, &mut Transform)>) {
+    let height = map.height as f32 * TILED_WIDTH * SCALE;
+    let width = map.width as f32 * TILED_WIDTH * SCALE;
+
+    let x = width / 2.0;
+    let y = height / 2.0;
+
     for (pos, mut trans) in &mut query.iter() {
         let t = trans.translation();
         let start = vec2(t.x(), t.y());
         let end = start.lerp(
             vec2(
-                pos.x as f32 * SCALE * TILED_WIDTH,
-                pos.y as f32 * SCALE * TILED_WIDTH,
+                pos.x as f32 * SCALE * TILED_WIDTH - x,
+                pos.y as f32 * SCALE * TILED_WIDTH - y,
             ),
             0.35,
         );
@@ -66,8 +62,10 @@ pub fn position_system(mut query: Query<(&mut Position, &mut Transform)>) {
 ///  移动
 pub fn player_movement_system(
     // time: Res<Time>,
+    // radio: Res<AudioOutput>,
     input: Res<Input<KeyCode>>,
     map: Res<Map>,
+    resource: Res<ResourceLocal>,
     mut player_query: Query<(Entity, &mut Position, &mut Player)>,
     mut immovable_query: Query<(Entity, &Position, &Immovable)>,
     mut moveable_query: Query<Without<Player, (Entity, &mut Position, &Movable)>>,
@@ -148,6 +146,7 @@ pub fn player_movement_system(
             match mov.get(&p2) {
                 Some(id) => to_move.insert(*id),
                 None => {
+                    // radio.play(resource.music_wall);
                     // 查询不可移动，清空队列
                     match immvo.get(&p2) {
                         Some(_) => to_move.clear(),
@@ -208,41 +207,7 @@ pub fn scoreboard_system(time: Res<Time>) {
     let _delta_seconds = f32::min(0.2, time.delta_seconds);
 }
 
-/// 事件监听
-pub fn event_listener_system(
-    time: Res<Time>,
-    mut state: ResMut<MyEventListenerState>,
-    events: Res<Events<MyEvent>>,
-) {
-    let _delta_seconds = f32::min(0.2, time.delta_seconds);
-
-    for ev in state.reader.iter(&events) {
-        // do something with `ev`
-        println!("my event, {:?}", ev);
-    }
-}
-
-// change map
-pub fn map_system(mut commands: Commands, mut map: ResMut<Map>, input: Res<Input<KeyCode>>) {
-    let mut map_file = "";
-    if input.just_released(KeyCode::Key1) {
-        map_file = "./assets/m1.txt";
-    }
-    if input.just_released(KeyCode::Key2) {
-        map_file = "./assets/m2.txt";
-    }
-    if input.just_released(KeyCode::Key3) {
-        map_file = "./assets/m3.txt";
-    }
-    if input.just_released(KeyCode::Key4) {
-        map_file = "./assets/m4.txt";
-    }
-    if !map_file.is_empty() {
-        println!("{}", map_file);
-        *map = Map::load(map_file).unwrap();
-        map.render(&mut commands);
-    }
-}
+pub struct UIBTN;
 
 pub fn button_system(
     button_materials: Res<ButtonMaterials>,
@@ -261,7 +226,7 @@ pub fn button_system(
             Interaction::Clicked => {
                 text.value = "Press".to_string();
                 *material = button_materials.pressed;
-                println!("Press ok")
+                // debug!("Press ok");
                 // load map
             }
             Interaction::Hovered => {
