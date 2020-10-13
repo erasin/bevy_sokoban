@@ -1,14 +1,10 @@
 use crate::components::*;
+use crate::data::*;
 use crate::events::*;
 use crate::map::*;
 use crate::resources::*;
 use crate::{SCALE, TILED_WIDTH};
-use bevy::{
-    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
-    math::vec2,
-    prelude::*,
-    render::camera::Camera,
-};
+use bevy::{math::vec2, prelude::*};
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -63,9 +59,10 @@ pub fn position_system(map: Res<Map>, mut query: Query<(&mut Position, &mut Tran
 pub fn player_movement_system(
     // time: Res<Time>,
     // radio: Res<AudioOutput>,
+    // resource: Res<ResourceData>,
     input: Res<Input<KeyCode>>,
     map: Res<Map>,
-    resource: Res<ResourceLocal>,
+    mut data: ResMut<GameData>,
     mut player_query: Query<(Entity, &mut Position, &mut Player)>,
     mut immovable_query: Query<(Entity, &Position, &Immovable)>,
     mut moveable_query: Query<Without<Player, (Entity, &mut Position, &Movable)>>,
@@ -160,7 +157,7 @@ pub fn player_movement_system(
         // 移动用户
         if to_move.remove(&entity.id()) {
             *pos = *pos + vol;
-            per.step += 1;
+            data.step += 1;
             // println!("{} {}", per.name, per.step);
         }
     }
@@ -176,6 +173,7 @@ pub fn player_movement_system(
 // 完成处理
 pub fn box_spot_system(
     mut commands: Commands,
+    mut data: ResMut<GameData>,
     mut events: ResMut<Events<MyEvent>>,
     mut box_entity: Query<(
         Entity,
@@ -195,6 +193,7 @@ pub fn box_spot_system(
                     sprite.index = b.sprite_ok.1;
                     *texture = b.sprite_ok.0;
                     pse.ok = true;
+                    data.spot += 1;
                     events.send(MyEvent::new(pb.x, pb.y));
                 }
             }
@@ -205,38 +204,4 @@ pub fn box_spot_system(
 /// 积分器
 pub fn scoreboard_system(time: Res<Time>) {
     let _delta_seconds = f32::min(0.2, time.delta_seconds);
-}
-
-pub struct UIBTN;
-
-pub fn button_system(
-    button_materials: Res<ButtonMaterials>,
-    mut interaction_query: Query<(
-        &Button,
-        Mutated<Interaction>,
-        &mut Handle<ColorMaterial>,
-        &Children,
-        &UIBTN,
-    )>,
-    text_query: Query<&mut Text>,
-) {
-    for (_button, interaction, mut material, children, _) in &mut interaction_query.iter() {
-        let mut text = text_query.get_mut::<Text>(children[0]).unwrap();
-        match *interaction {
-            Interaction::Clicked => {
-                text.value = "Press".to_string();
-                *material = button_materials.pressed;
-                // debug!("Press ok");
-                // load map
-            }
-            Interaction::Hovered => {
-                text.value = "Hover".to_string();
-                *material = button_materials.hovered;
-            }
-            Interaction::None => {
-                text.value = "Button".to_string();
-                *material = button_materials.normal;
-            }
-        }
-    }
 }

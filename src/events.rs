@@ -1,3 +1,4 @@
+use crate::camera_effect::*;
 use bevy::prelude::*;
 
 #[derive(Debug)]
@@ -18,6 +19,7 @@ pub struct MyEventListenerState {
 pub fn event_listener_system(
     time: Res<Time>,
     mut state: ResMut<MyEventListenerState>,
+    mut camera_data: ResMut<CameraData>,
     events: Res<Events<MyEvent>>,
 ) {
     let _delta_seconds = f32::min(0.2, time.delta_seconds);
@@ -25,5 +27,6 @@ pub fn event_listener_system(
     for ev in state.reader.iter(&events) {
         // do something with `ev`
         println!("my event, {:?}", ev);
+        camera_data.state = CameraState::Shake;
     }
 }

@@ -1,10 +1,7 @@
-use bevy::prelude::*;
-
-use crate::resources::*;
+use crate::SCALE;
 use crate::TILED_WIDTH;
-
+use bevy::prelude::*;
 pub struct Grid(pub i32, pub i32);
-
 #[derive(Default)]
 pub struct GridPlugin;
 
@@ -25,14 +22,20 @@ fn setup_system(
     let row_count = grid.1;
 
     let line_color = materials.add(Color::hex("000000").unwrap().into());
-    let bounds = Vec2::new(400.0, 500.0);
-    let def_width = TILED_WIDTH;
+    let def_width = TILED_WIDTH * SCALE;
+    let b_x = def_width * col_count as f32;
+    let b_y = def_width * row_count as f32;
+    let bounds = Vec2::new(b_x, b_y);
 
     for i in 0..=row_count {
         let j = i as f32;
         commands.spawn(SpriteComponents {
             material: line_color,
-            transform: Transform::from_translation(Vec3::new(def_width * j, 0.0, 0.0)),
+            transform: Transform::from_translation(Vec3::new(
+                def_width * j - b_x / 2.0 - j,
+                0.0,
+                0.0,
+            )),
             sprite: Sprite {
                 size: Vec2::new(2.0, bounds.y()),
                 resize_mode: SpriteResizeMode::Automatic,
@@ -45,7 +48,11 @@ fn setup_system(
         let j = i as f32;
         commands.spawn(SpriteComponents {
             material: line_color,
-            transform: Transform::from_translation(Vec3::new(0.0, def_width * j, 0.0)),
+            transform: Transform::from_translation(Vec3::new(
+                0.0,
+                def_width * j - b_y / 2.0 - j,
+                0.0,
+            )),
             sprite: Sprite {
                 size: Vec2::new(bounds.x(), 2.0),
                 resize_mode: SpriteResizeMode::Automatic,

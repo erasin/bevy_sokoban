@@ -2,10 +2,7 @@ use bevy::prelude::*;
 use std::ops::{Add, Sub};
 
 /// 用户
-pub struct Player {
-    pub name: String,
-    pub step: i32,
-}
+pub struct Player;
 
 /// 箱子
 pub struct Box {

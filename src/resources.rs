@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub struct ResourceLocal {
+pub struct ResourceData {
     pub texture_atlas_sheet: Handle<TextureAtlas>,
     pub texture_atlas_player: Handle<TextureAtlas>,
     pub texture_atlas_box_blue: Handle<TextureAtlas>,
@@ -56,7 +56,7 @@ fn setup_system(
 
     let music_wall = asset_server.load("assets/sounds/wall.mp3").unwrap();
 
-    let resource = ResourceLocal {
+    let resource = ResourceData {
         texture_atlas_sheet,
         texture_atlas_player,
         texture_atlas_box_blue,
@@ -65,21 +65,4 @@ fn setup_system(
     };
 
     commands.insert_resource(resource);
-}
-
-pub struct ButtonMaterials {
-    pub normal: Handle<ColorMaterial>,
-    pub hovered: Handle<ColorMaterial>,
-    pub pressed: Handle<ColorMaterial>,
-}
-
-impl FromResources for ButtonMaterials {
-    fn from_resources(resources: &Resources) -> Self {
-        let mut materials = resources.get_mut::<Assets<ColorMaterial>>().unwrap();
-        ButtonMaterials {
-            normal: materials.add(Color::rgb(0.02, 0.02, 0.02).into()),
-            hovered: materials.add(Color::rgb(0.05, 0.05, 0.05).into()),
-            pressed: materials.add(Color::rgb(0.1, 0.5, 0.1).into()),
-        }
-    }
 }

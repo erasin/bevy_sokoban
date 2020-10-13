@@ -1,18 +1,25 @@
+mod camera_effect;
 mod components;
+mod data;
 mod debug;
 mod events;
 mod grid;
 mod map;
 mod resources;
+mod state;
 mod systems;
+mod ui;
 
 use bevy::{prelude::*, render::pass::ClearColor};
+use camera_effect::*;
+use data::*;
 use debug::DebugPlugin;
 use events::*;
 use grid::GridPlugin;
 use map::MapPlugin;
 use resources::*;
 use systems::*;
+use ui::*;
 
 /// 瓦片宽度大小设定
 const TILED_WIDTH: f32 = 32.0;
@@ -33,15 +40,16 @@ fn main() {
             ..Default::default()
         })
         .add_default_plugins()
-        .add_plugin(DebugPlugin::default())
+        .init_resource::<GameData>()
+        .init_resource::<MyEventListenerState>()
+        .add_event::<MyEvent>()
         .add_plugin(ResourcePlugin::default())
+        .add_plugin(CameraEffectPlugin::new(0.5))
+        .add_plugin(UIPlugin::default())
+        .add_plugin(DebugPlugin::default())
         .add_plugin(GridPlugin::default())
         .add_plugin(MapPlugin::default())
-        // .init_resource::<ButtonMaterials>()
-        .add_event::<MyEvent>()
-        .init_resource::<MyEventListenerState>()
         .add_startup_system(setup.system())
-        // .add_system_to_stage(stage::FIRST, camera_system.system())
         .add_system(animate_sprite_system.system())
         .add_system_to_stage(stage::EVENT_UPDATE, player_movement_system.system())
         .add_system(box_spot_system.system())
@@ -53,8 +61,9 @@ fn main() {
 
 /// 初始化处理
 pub fn setup(mut commands: Commands) {
-    print!("setup main");
-    commands
-        .spawn(Camera2dComponents::default()) // 加载相机
-        .spawn(UiCameraComponents::default()); // 加载ui层
+    println!("setup main");
+    // commands
+    //     .spawn(Camera2dComponents::default())
+    //     .with(CameraTarget) // 加载相机
+    //     .spawn(UiCameraComponents::default()); // 加载ui层
 }

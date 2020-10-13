@@ -51,7 +51,7 @@ impl Map {
     }
 
     /// 渲染处理
-    pub fn render(&self, commands: &mut Commands, resource: Res<ResourceLocal>) {
+    pub fn render(&self, commands: &mut Commands, resource: Res<ResourceData>) {
         for (y, row) in self.tides.iter().rev().enumerate() {
             for (x, column) in row.iter().enumerate() {
                 let pos = Position {
@@ -107,10 +107,7 @@ impl Map {
                             })
                             .with(Timer::from_seconds(0.2, true))
                             .with(pos.clone())
-                            .with(Player {
-                                name: "player".to_string(),
-                                step: 0,
-                            });
+                            .with(Player);
                     }
                     "B" => {
                         commands
@@ -184,7 +181,7 @@ fn reload_system(
     mut commands: Commands,
     mut map: ResMut<Map>,
     input: Res<Input<KeyCode>>,
-    resource: Res<ResourceLocal>,
+    resource: Res<ResourceData>,
     mut pos_query: Query<(Entity, &Position)>,
 ) {
     let mut map_file = "";
