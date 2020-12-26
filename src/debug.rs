@@ -19,16 +19,16 @@ impl Plugin for DebugPlugin {
 }
 
 fn setup_system(
-    mut commands: Commands,
+    commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut _materials: ResMut<Assets<ColorMaterial>>,
 ) {
     println!("load debug");
 
-    let font_handle = asset_server.load("assets/fonts/KenneyFuture.ttf").unwrap();
+    let font_handle = asset_server.load("fonts/KenneyFuture.ttf");
 
     commands
-        .spawn(TextComponents {
+        .spawn(TextBundle {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
@@ -44,6 +44,7 @@ fn setup_system(
                 style: TextStyle {
                     font_size: 20.0,
                     color: Color::BLACK,
+                    alignment: TextAlignment::default(),
                 },
             },
             ..Default::default()
@@ -52,7 +53,7 @@ fn setup_system(
 }
 
 fn fps_text_update_system(diagnostics: Res<Diagnostics>, mut query: Query<(&mut Text, &FpsText)>) {
-    for (mut text, _tag) in &mut query.iter() {
+    for (mut text, _tag) in query.iter_mut() {
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {
                 text.value = format!("FPS: {:.2}", average);

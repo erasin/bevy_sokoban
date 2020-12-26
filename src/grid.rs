@@ -14,7 +14,7 @@ impl Plugin for GridPlugin {
 
 // 绘制网格
 fn setup_system(
-    mut commands: Commands,
+    commands: &mut Commands,
     grid: Res<Grid>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
@@ -29,15 +29,15 @@ fn setup_system(
 
     for i in 0..=row_count {
         let j = i as f32;
-        commands.spawn(SpriteComponents {
-            material: line_color,
+        commands.spawn(SpriteBundle {
+            material: line_color.as_weak(),
             transform: Transform::from_translation(Vec3::new(
                 def_width * j - b_x / 2.0 - j,
                 0.0,
                 0.0,
             )),
             sprite: Sprite {
-                size: Vec2::new(2.0, bounds.y()),
+                size: Vec2::new(2.0, bounds.y),
                 resize_mode: SpriteResizeMode::Automatic,
             },
             ..Default::default()
@@ -46,15 +46,15 @@ fn setup_system(
 
     for i in 0..col_count {
         let j = i as f32;
-        commands.spawn(SpriteComponents {
-            material: line_color,
+        commands.spawn(SpriteBundle {
+            material: line_color.as_weak(),
             transform: Transform::from_translation(Vec3::new(
                 0.0,
                 def_width * j - b_y / 2.0 - j,
                 0.0,
             )),
             sprite: Sprite {
-                size: Vec2::new(bounds.x(), 2.0),
+                size: Vec2::new(bounds.x, 2.0),
                 resize_mode: SpriteResizeMode::Automatic,
             },
             ..Default::default()

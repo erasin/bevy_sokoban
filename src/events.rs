@@ -10,23 +10,18 @@ impl MyEvent {
     }
 }
 
-#[derive(Default)]
-pub struct MyEventListenerState {
-    pub reader: EventReader<MyEvent>,
-}
-
 /// 事件监听
 pub fn event_listener_system(
     time: Res<Time>,
-    mut state: ResMut<MyEventListenerState>,
     mut camera_data: ResMut<CameraData>,
     events: Res<Events<MyEvent>>,
+    mut state: Local<EventReader<MyEvent>>,
 ) {
-    let _delta_seconds = f32::min(0.2, time.delta_seconds);
+    let _delta_seconds = f32::min(0.2, time.delta_seconds());
 
-    for ev in state.reader.iter(&events) {
+    for ev in state.iter(&events) {
         // do something with `ev`
-        println!("my event, {:?}", ev);
+        println!("my event, {:?}", *ev);
         camera_data.state = CameraState::Shake;
     }
 }

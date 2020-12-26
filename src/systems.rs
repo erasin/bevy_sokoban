@@ -22,13 +22,12 @@ use std::collections::HashSet;
 /// 动画效果
 pub fn animate_sprite_system(
     texture_atlases: Res<Assets<TextureAtlas>>,
-    mut query: Query<With<Player, (&mut Timer, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>>,
+    mut query: Query<(&mut Timer, &mut TextureAtlasSprite, &Handle<TextureAtlas>), With<Player>>,
 ) {
-    for (mut timer, mut sprite, texture_atlas_handle) in &mut query.iter() {
-        if timer.finished {
-            let texture_atlas = texture_atlases.get(&texture_atlas_handle).unwrap();
+    for (timer, mut sprite, texture_atlas_handle) in query.iter_mut() {
+        if timer.finished() {
+            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
             sprite.index = ((sprite.index as usize + 1) % texture_atlas.textures.len()) as u32;
-            timer.reset();
         }
     }
 }
@@ -41,9 +40,9 @@ pub fn position_system(map: Res<Map>, mut query: Query<(&mut Position, &mut Tran
     let x = width / 2.0;
     let y = height / 2.0;
 
-    for (pos, mut trans) in &mut query.iter() {
-        let t = trans.translation();
-        let start = vec2(t.x(), t.y());
+    for (pos, mut trans) in query.iter_mut() {
+        let t = trans.translation.clone();
+        let start = vec2(t.x, t.y);
         let end = start.lerp(
             vec2(
                 pos.x as f32 * SCALE * TILED_WIDTH - x,
@@ -51,21 +50,22 @@ pub fn position_system(map: Res<Map>, mut query: Query<(&mut Position, &mut Tran
             ),
             0.35,
         );
-        trans.set_translation(Vec3::new(end.x(), end.y(), t.z()))
+        trans.translation.x = end.x;
+        trans.translation.y = end.y;
     }
 }
 
 ///  移动
 pub fn player_movement_system(
     // time: Res<Time>,
-    // radio: Res<AudioOutput>,
-    // resource: Res<ResourceData>,
+    radio: Res<Audio>,
+    resource: Res<ResourceData>,
     input: Res<Input<KeyCode>>,
     map: Res<Map>,
     mut data: ResMut<GameData>,
     mut player_query: Query<(Entity, &mut Position, &mut Player)>,
-    mut immovable_query: Query<(Entity, &Position, &Immovable)>,
-    mut moveable_query: Query<Without<Player, (Entity, &mut Position, &Movable)>>,
+    immovable_query: Query<(Entity, &Position, &Immovable)>,
+    mut moveable_query: Query<(Entity, &mut Position, &Movable), Without<Player>>,
     // mut camera: Query<(&mut Translation, &Camera)>,
 ) {
     // let _delta_seconds = f32::min(0.2, time.delta_seconds);
@@ -94,21 +94,19 @@ pub fn player_movement_system(
     // 移动链对象
     let mut to_move = HashSet::new();
 
-    for (entity, mut pos, mut per) in &mut player_query.iter() {
+    for (entity, mut pos, mut _per) in player_query.iter_mut() {
         to_move.insert(entity.id());
 
         // 所有可移动
         let mov: HashMap<(i32, i32), u32> = moveable_query
-            .iter()
-            .iter()
-            .map(|t| ((t.1.x, t.1.y), t.0.id()))
+            .iter_mut()
+            .map(|(e, p, _)| ((p.x, p.y), e.id()))
             .collect::<HashMap<_, _>>();
 
         // 所有不可移动
         let immvo: HashMap<(i32, i32), u32> = immovable_query
             .iter()
-            .iter()
-            .map(|t| ((t.1.x, t.1.y), t.0.id()))
+            .map(|(e, p, _)| ((p.x, p.y), e.id()))
             .collect::<HashMap<_, _>>();
 
         // 移动方向链存储器
@@ -143,7 +141,7 @@ pub fn player_movement_system(
             match mov.get(&p2) {
                 Some(id) => to_move.insert(*id),
                 None => {
-                    // radio.play(resource.music_wall);
+                    radio.play(resource.music_wall.as_weak());
                     // 查询不可移动，清空队列
                     match immvo.get(&p2) {
                         Some(_) => to_move.clear(),
@@ -163,7 +161,7 @@ pub fn player_movement_system(
     }
 
     // 移动移动对象
-    for (e, mut pos, _) in &mut moveable_query.iter() {
+    for (e, mut pos, _) in moveable_query.iter_mut() {
         if to_move.remove(&e.id()) {
             *pos = *pos + vol;
         }
@@ -172,7 +170,8 @@ pub fn player_movement_system(
 
 // 完成处理
 pub fn box_spot_system(
-    mut commands: Commands,
+    commands: &mut Commands,
+    _resource: Res<ResourceData>,
     mut data: ResMut<GameData>,
     mut events: ResMut<Events<MyEvent>>,
     mut box_entity: Query<(
@@ -184,14 +183,14 @@ pub fn box_spot_system(
     )>,
     mut spot_entity: Query<(&Position, &mut BoxSpot)>,
 ) {
-    for (ps, mut pse) in &mut spot_entity.iter() {
+    for (ps, mut pse) in spot_entity.iter_mut() {
         if !pse.ok {
-            for (e, pb, b, mut sprite, mut texture) in &mut box_entity.iter() {
+            for (e, pb, b, mut sprite, mut texture) in box_entity.iter_mut() {
                 if ps == pb {
-                    commands.insert_one(e, Immovable);
                     commands.remove_one::<Movable>(e);
+                    commands.insert_one(e, Immovable);
                     sprite.index = b.sprite_ok.1;
-                    *texture = b.sprite_ok.0;
+                    *texture = b.sprite_ok.0.as_weak();
                     pse.ok = true;
                     data.spot += 1;
                     events.send(MyEvent::new(pb.x, pb.y));
@@ -203,5 +202,5 @@ pub fn box_spot_system(
 
 /// 积分器
 pub fn scoreboard_system(time: Res<Time>) {
-    let _delta_seconds = f32::min(0.2, time.delta_seconds);
+    let _delta_seconds = f32::min(0.2, time.delta_seconds());
 }

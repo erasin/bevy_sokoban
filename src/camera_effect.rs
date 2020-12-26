@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::render::camera::Camera;
 use rand::{thread_rng, Rng};
 use std::time::Duration;
 
@@ -41,10 +40,8 @@ impl Plugin for CameraEffectPlugin {
     }
 }
 
-fn setup_system(mut commands: Commands) {
-    commands
-        .spawn(Camera2dComponents::default())
-        .with(CameraTarget);
+fn setup_system(commands: &mut Commands) {
+    commands.spawn(Camera2dBundle::default()).with(CameraTarget);
 }
 
 // 抖动原型
@@ -58,23 +55,20 @@ fn camera_shake_system(
         let x_target: f32 = rng.gen_range(-20.0, 20.0);
         let y_target: f32 = rng.gen_range(-20.0, 20.0);
 
-        for (_, mut trans) in &mut query.iter() {
+        for (_, mut trans) in query.iter_mut() {
             // if camera.name.eq(&Some("Camera2d".to_string())) {
             // 相机 z 高度位置需要高于要显示的对象
-            let x = trans.translation().x();
-            let y = trans.translation().y();
-            let z = trans.translation().z();
-            trans.set_translation(Vec3::new(x + x_target, y + y_target, z))
-            // }
+            trans.translation.x += x_target;
+            trans.translation.y += y_target;
         }
     }
-    camera_data.timer.tick(time.delta_seconds);
-    if camera_data.timer.finished {
+    camera_data.timer.tick(time.delta_seconds());
+    if camera_data.timer.finished() {
         camera_data.state = CameraState::Normal;
 
-        for (_, mut trans) in &mut query.iter() {
-            let z = trans.translation().z();
-            trans.set_translation(Vec3::new(0.0, 0.0, z));
+        for (_, mut trans) in query.iter_mut() {
+            trans.translation.x = 0.0;
+            trans.translation.y = 0.0;
         }
     }
 }
@@ -84,17 +78,17 @@ use crate::components::Player;
 // 中心跟随
 // 矩形跟随
 fn camera_follow_system(
+    time: Res<Time>,
     camera_data: Res<CameraData>,
-    mut player_query: Query<(&Player, &Transform)>,
+    player_query: Query<(&Player, &Transform)>,
     mut camera_query: Query<(&CameraTarget, &mut Transform)>,
 ) {
     if camera_data.state == CameraState::Follow {
-        for (_, player_trans) in &mut player_query.iter() {
-            for (_, mut camera_trans) in &mut camera_query.iter() {
-                let x = player_trans.translation().x();
-                let y = player_trans.translation().y();
-                let z = camera_trans.translation().z();
-                camera_trans.set_translation(Vec3::new(x, y, z));
+        let delta = time.delta_seconds();
+        for (_, player_trans) in player_query.iter() {
+            for (_, mut camera_trans) in camera_query.iter_mut() {
+                camera_trans.translation.x = player_trans.translation.x * delta;
+                camera_trans.translation.y = player_trans.translation.y * delta;
             }
         }
     }

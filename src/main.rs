@@ -32,27 +32,26 @@ fn main() {
         .add_resource(ClearColor(Color::hex("E0E0E0").unwrap()))
         .add_resource(WindowDescriptor {
             title: "sokoban!".to_string(),
-            width: 800,
-            height: 800,
+            width: 800.0,
+            height: 800.0,
             vsync: true,
             // resizable: false,
             // mode: WindowMode::Fullscreen { use_size: false },
             ..Default::default()
         })
-        .add_default_plugins()
+        .add_plugins(DefaultPlugins)
         .init_resource::<GameData>()
-        .init_resource::<MyEventListenerState>()
         .add_event::<MyEvent>()
         .add_plugin(ResourcePlugin::default())
         .add_plugin(CameraEffectPlugin::new(0.5))
         .add_plugin(UIPlugin::default())
         .add_plugin(DebugPlugin::default())
-        .add_plugin(GridPlugin::default())
+        // .add_plugin(GridPlugin::default())
         .add_plugin(MapPlugin::default())
         .add_startup_system(setup.system())
         .add_system(animate_sprite_system.system())
-        .add_system_to_stage(stage::EVENT_UPDATE, player_movement_system.system())
         .add_system(box_spot_system.system())
+        .add_system(player_movement_system.system())
         .add_system(position_system.system())
         .add_system(scoreboard_system.system())
         .add_system(event_listener_system.system())
@@ -60,10 +59,10 @@ fn main() {
 }
 
 /// 初始化处理
-pub fn setup(mut commands: Commands) {
+pub fn setup(commands: &mut Commands) {
     println!("setup main");
     // commands
-    //     .spawn(Camera2dComponents::default())
+    //     .spawn(Camera2dBundle::default())
     //     .with(CameraTarget) // 加载相机
-    //     .spawn(UiCameraComponents::default()); // 加载ui层
+    //     .spawn(UiCameraBundle::default()); // 加载ui层
 }

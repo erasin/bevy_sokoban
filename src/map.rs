@@ -64,9 +64,9 @@ impl Map {
                     "." => {
                         // floor
                         commands
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -76,10 +76,13 @@ impl Map {
                     "W" => {
                         // wall
                         commands
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 1.0)),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                transform: Transform {
+                                    translation: Vec3::new(0.0, 0.0, 1.0),
+                                    rotation: Quat::identity(),
+                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                },
                                 sprite: TextureAtlasSprite::new(3),
                                 ..Default::default()
                             })
@@ -90,19 +93,22 @@ impl Map {
                     "P" => {
                         commands
                             // floor
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
                             .with(pos.clone())
                             .with(Floor)
                             // player
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_player,
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 1.0)),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_player.as_weak(),
+                                transform: Transform {
+                                    translation: Vec3::new(0.0, 0.0, 1.0),
+                                    rotation: Quat::identity(),
+                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                },
                                 ..Default::default()
                             })
                             .with(Timer::from_seconds(0.2, true))
@@ -112,45 +118,51 @@ impl Map {
                     "B" => {
                         commands
                             // floor
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
                             .with(pos.clone())
                             .with(Floor)
                             // box
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_box_blue,
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 2.0)),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_box_blue.as_weak(),
+                                transform: Transform {
+                                    translation: Vec3::new(0.0, 0.0, 2.0),
+                                    rotation: Quat::identity(),
+                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                },
                                 ..Default::default()
                             })
                             .with(Timer::from_seconds(0.5, true))
                             .with(pos.clone())
                             .with(Box {
-                                sprite_ok: (resource.texture_atlas_sheet, 4),
+                                sprite_ok: (resource.texture_atlas_sheet.as_weak(), 4),
                             })
                             .with(Movable);
                     }
                     "S" => {
                         commands
                             // floor
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_sheet,
-                                transform: Transform::from_scale(SCALE),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
                             .with(pos.clone())
                             .with(Floor)
                             // box spot
-                            .spawn(SpriteSheetComponents {
-                                texture_atlas: resource.texture_atlas_sheet,
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
                                 sprite: TextureAtlasSprite::new(2),
-                                transform: Transform::from_scale(SCALE)
-                                    .with_translation(Vec3::new(0.0, 0.0, 0.1)),
+                                transform: Transform {
+                                    translation: Vec3::new(0.0, 0.0, 0.1),
+                                    rotation: Quat::identity(),
+                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                },
                                 ..Default::default()
                             })
                             .with(pos)
@@ -178,11 +190,11 @@ mod test {
 
 // change map
 fn reload_system(
-    mut commands: Commands,
+    commands: &mut Commands,
     mut map: ResMut<Map>,
     input: Res<Input<KeyCode>>,
     resource: Res<ResourceData>,
-    mut pos_query: Query<(Entity, &Position)>,
+    pos_query: Query<(Entity, &Position)>,
 ) {
     let mut map_file = "";
     if input.just_released(KeyCode::Key1) {
@@ -200,11 +212,11 @@ fn reload_system(
 
     if !map_file.is_empty() {
         // 清理
-        for (e, _) in &mut pos_query.iter() {
+        for (e, _) in pos_query.iter() {
             commands.despawn(e);
         }
 
         *map = Map::load(map_file).unwrap();
-        map.render(&mut commands, resource);
+        map.render(commands, resource);
     }
 }
