@@ -81,7 +81,7 @@ fn setup_system(
                                 .with_children(|parent| {
                                     parent.spawn(TextBundle {
                                         text: Text {
-                                            value: "Button".to_string(),
+                                            value: "btn".to_string(),
                                             font: resource.ui_font.as_weak(),
                                             style: TextStyle {
                                                 font_size: 20.0,
@@ -107,7 +107,7 @@ fn setup_system(
                             parent
                                 .spawn(TextBundle {
                                     text: Text {
-                                        value: format!("Step:{}", data.step),
+                                        value: format!("step:{}", data.step),
                                         font: resource.ui_font.as_weak(),
                                         style: TextStyle {
                                             font_size: 30.0,
@@ -136,7 +136,7 @@ fn setup_system(
                                         ..Default::default()
                                     },
                                     text: Text {
-                                        value: format!("Spot:{}", data.spot),
+                                        value: format!("p:{}", data.spot),
                                         font: resource.ui_font.as_weak(),
                                         style: TextStyle {
                                             font_size: 30.0,
@@ -158,10 +158,10 @@ fn text_system(
     mut spot_query: Query<(&mut Text, &UISpot)>,
 ) {
     for (mut t, _) in step_query.iter_mut() {
-        t.value = format!("Step:{}", data.step);
+        t.value = format!("step:{}", data.step);
     }
     for (mut t, _) in spot_query.iter_mut() {
-        t.value = format!("Spot:{}", data.spot);
+        t.value = format!("P:{}", data.spot);
     }
 }
 

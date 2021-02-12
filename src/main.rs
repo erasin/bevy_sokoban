@@ -15,9 +15,10 @@ use camera_effect::*;
 use data::*;
 use debug::DebugPlugin;
 use events::*;
-use grid::GridPlugin;
-use map::MapPlugin;
+// use grid::GridPlugin;
+use map::{Map, MapPlugin};
 use resources::*;
+use state::*;
 use systems::*;
 use ui::*;
 
@@ -41,6 +42,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .init_resource::<GameData>()
+        .add_resource(State::new(GameState::Loading))
         .add_event::<MyEvent>()
         .add_plugin(ResourcePlugin::default())
         .add_plugin(CameraEffectPlugin::new(0.5))
@@ -59,8 +61,13 @@ fn main() {
 }
 
 /// 初始化处理
-pub fn setup(commands: &mut Commands) {
+//pub fn setup(commands: &mut Commands) {
+pub fn setup(commands: &mut Commands, mut map: ResMut<Map>, resource: Res<ResourceData>) {
     println!("setup main");
+
+    let map_file = "./assets/m4.txt";
+    *map = Map::load(map_file).unwrap();
+    map.render(commands, resource);
     // commands
     //     .spawn(Camera2dBundle::default())
     //     .with(CameraTarget) // 加载相机

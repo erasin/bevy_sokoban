@@ -17,6 +17,7 @@ impl Plugin for ResourcePlugin {
             bevy::app::startup_stage::STARTUP,
             "INITRES",
             SystemStage::serial(),
+            // .add_system()
         );
         app.add_startup_system_to_stage("INITRES", setup_system.system());
     }
