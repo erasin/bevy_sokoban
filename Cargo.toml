@@ -5,7 +5,7 @@ authors = ["erasin <erasinoo@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-bevy = { version = "0.4", features = ["default", "wav"] }
+bevy = { version = "0.5", features = ["default", "wav"] }
 #bevy = { git = "https://github.com/bevyengine/bevy", features = ["default", "wav"] }
 #bevy = { path = "../../game/bevy", features = ["default", "wav"] }
 rand = "0.7"

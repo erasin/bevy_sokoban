@@ -3,7 +3,7 @@ use crate::data::*;
 use bevy::prelude::*;
 
 // 状态
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum GameState {
     Loading, //加载中
     Menu,    // 菜单位置

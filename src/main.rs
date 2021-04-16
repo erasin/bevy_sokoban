@@ -30,8 +30,8 @@ const SCALE: f32 = 2.0;
 fn main() {
     dotenv::dotenv().ok();
     App::build()
-        .add_resource(ClearColor(Color::hex("E0E0E0").unwrap()))
-        .add_resource(WindowDescriptor {
+        .insert_resource(ClearColor(Color::hex("E0E0E0").unwrap()))
+        .insert_resource(WindowDescriptor {
             title: "sokoban!".to_string(),
             width: 800.0,
             height: 800.0,
@@ -42,7 +42,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .init_resource::<GameData>()
-        .add_resource(State::new(GameState::Loading))
+        .insert_resource(State::new(GameState::Loading))
         .add_event::<MyEvent>()
         .add_plugin(ResourcePlugin::default())
         .add_plugin(CameraEffectPlugin::new(0.5))
@@ -61,8 +61,8 @@ fn main() {
 }
 
 /// 初始化处理
-//pub fn setup(commands: &mut Commands) {
-pub fn setup(commands: &mut Commands, mut map: ResMut<Map>, resource: Res<ResourceData>) {
+//pub fn setup(mut commands: Commands) {
+pub fn setup(commands: Commands, mut map: ResMut<Map>, resource: Res<ResourceData>) {
     println!("setup main");
 
     let map_file = "./assets/m4.txt";

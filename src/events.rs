@@ -14,12 +14,11 @@ impl MyEvent {
 pub fn event_listener_system(
     time: Res<Time>,
     mut camera_data: ResMut<CameraData>,
-    events: Res<Events<MyEvent>>,
-    mut state: Local<EventReader<MyEvent>>,
+    mut state: EventReader<MyEvent>,
 ) {
     let _delta_seconds = f32::min(0.2, time.delta_seconds());
 
-    for ev in state.iter(&events) {
+    for ev in state.iter() {
         // do something with `ev`
         println!("my event, {:?}", *ev);
         camera_data.state = CameraState::Shake;

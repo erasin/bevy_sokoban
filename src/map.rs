@@ -51,7 +51,7 @@ impl Map {
     }
 
     /// 渲染处理
-    pub fn render(&self, commands: &mut Commands, resource: Res<ResourceData>) {
+    pub fn render(&self, mut commands: Commands, resource: Res<ResourceData>) {
         for (y, row) in self.tides.iter().rev().enumerate() {
             for (x, column) in row.iter().enumerate() {
                 let pos = Position {
@@ -64,109 +64,122 @@ impl Map {
                     "." => {
                         // floor
                         commands
-                            .spawn(SpriteSheetBundle {
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
-                            .with(pos.clone())
-                            .with(Floor);
+                            .insert(pos.clone())
+                            .insert(Floor);
                     }
                     "W" => {
                         // wall
                         commands
-                            .spawn(SpriteSheetBundle {
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_sheet.as_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
-                                    rotation: Quat::identity(),
+                                    rotation: Quat::IDENTITY,
                                     scale: Vec3::new(SCALE, SCALE, 1.0),
                                 },
                                 sprite: TextureAtlasSprite::new(3),
                                 ..Default::default()
                             })
-                            .with(pos)
-                            .with(Wall {})
-                            .with(Immovable);
+                            .insert(pos)
+                            .insert(Wall {})
+                            .insert(Immovable);
                     }
                     "P" => {
                         commands
                             // floor
-                            .spawn(SpriteSheetBundle {
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
-                            .with(pos.clone())
-                            .with(Floor)
-                            // player
-                            .spawn(SpriteSheetBundle {
+                            .insert(pos.clone())
+                            .insert(Floor);
+
+                        commands
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_player.as_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
-                                    rotation: Quat::identity(),
+                                    rotation: Quat::IDENTITY,
                                     scale: Vec3::new(SCALE, SCALE, 1.0),
                                 },
                                 ..Default::default()
                             })
-                            .with(Timer::from_seconds(0.2, true))
-                            .with(pos.clone())
-                            .with(Player);
+                            .insert(Timer::from_seconds(0.2, true))
+                            .insert(pos.clone())
+                            .insert(Player);
                     }
                     "B" => {
+                        // floor
                         commands
-                            // floor
-                            .spawn(SpriteSheetBundle {
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
-                            .with(pos.clone())
-                            .with(Floor)
-                            // box
-                            .spawn(SpriteSheetBundle {
+                            .insert(pos.clone())
+                            .insert(Floor);
+
+                        // box
+                        commands
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_box_blue.as_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 2.0),
-                                    rotation: Quat::identity(),
+                                    rotation: Quat::IDENTITY,
                                     scale: Vec3::new(SCALE, SCALE, 1.0),
                                 },
                                 ..Default::default()
                             })
-                            .with(Timer::from_seconds(0.5, true))
-                            .with(pos.clone())
-                            .with(Box {
+                            .insert(Timer::from_seconds(0.5, true))
+                            .insert(pos.clone())
+                            .insert(Box {
                                 sprite_ok: (resource.texture_atlas_sheet.as_weak(), 4),
                             })
-                            .with(Movable);
+                            .insert(Movable);
                     }
                     "S" => {
+                        // floor
                         commands
-                            // floor
-                            .spawn(SpriteSheetBundle {
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
-                            .with(pos.clone())
-                            .with(Floor)
-                            // box spot
-                            .spawn(SpriteSheetBundle {
+                            .insert(pos.clone())
+                            .insert(Floor);
+
+                        // box spot
+                        commands
+                            .spawn()
+                            .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: resource.texture_atlas_sheet.as_weak(),
                                 sprite: TextureAtlasSprite::new(2),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 0.1),
-                                    rotation: Quat::identity(),
+                                    rotation: Quat::IDENTITY,
                                     scale: Vec3::new(SCALE, SCALE, 1.0),
                                 },
                                 ..Default::default()
                             })
-                            .with(pos)
-                            .with(BoxSpot { ok: false });
+                            .insert(pos)
+                            .insert(BoxSpot { ok: false });
                     }
                     "-" => (),
                     c => panic!("unrecognized map item {}", c),
@@ -190,7 +203,7 @@ mod test {
 
 // change map
 fn reload_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut map: ResMut<Map>,
     input: Res<Input<KeyCode>>,
     resource: Res<ResourceData>,
@@ -213,7 +226,7 @@ fn reload_system(
     if !map_file.is_empty() {
         // 清理
         for (e, _) in pos_query.iter() {
-            commands.despawn(e);
+            commands.entity(e).despawn()
         }
 
         *map = Map::load(map_file).unwrap();

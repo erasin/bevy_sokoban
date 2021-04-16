@@ -19,7 +19,7 @@ impl Plugin for DebugPlugin {
 }
 
 fn setup_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut _materials: ResMut<Assets<ColorMaterial>>,
 ) {
@@ -28,7 +28,8 @@ fn setup_system(
     let font_handle = asset_server.load("fonts/KenneyFuture.ttf");
 
     commands
-        .spawn(TextBundle {
+        .spawn()
+        .insert_bundle(TextBundle {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
@@ -39,24 +40,36 @@ fn setup_system(
                 ..Default::default()
             },
             text: Text {
-                value: "FPS:".to_string(),
-                font: font_handle,
-                style: TextStyle {
-                    font_size: 20.0,
-                    color: Color::BLACK,
-                    alignment: TextAlignment::default(),
-                },
+                sections: vec![
+                    TextSection {
+                        value: "FPS: ".to_string(),
+                        style: TextStyle {
+                            font: font_handle.clone(),
+                            font_size: 60.0,
+                            color: Color::WHITE,
+                        },
+                    },
+                    TextSection {
+                        value: "".to_string(),
+                        style: TextStyle {
+                            font: font_handle,
+                            font_size: 60.0,
+                            color: Color::GOLD,
+                        },
+                    },
+                ],
+                ..Default::default()
             },
             ..Default::default()
         })
-        .with(FpsText);
+        .insert(FpsText);
 }
 
 fn fps_text_update_system(diagnostics: Res<Diagnostics>, mut query: Query<(&mut Text, &FpsText)>) {
     for (mut text, _tag) in query.iter_mut() {
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {
-                text.value = format!("FPS: {:.2}", average);
+                text.sections[1].value = format!("{:.2}", average);
             }
         }
     }

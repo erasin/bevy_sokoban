@@ -14,17 +14,16 @@ pub struct ResourcePlugin;
 impl Plugin for ResourcePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_stage_before(
-            bevy::app::startup_stage::STARTUP,
+            bevy::app::StartupStage::Startup,
             "INITRES",
-            SystemStage::serial(),
-            // .add_system()
+            SystemStage::single_threaded(),
         );
         app.add_startup_system_to_stage("INITRES", setup_system.system());
     }
 }
 
 fn setup_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     _textures: ResMut<Assets<Texture>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,

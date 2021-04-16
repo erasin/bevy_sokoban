@@ -15,15 +15,17 @@ impl Plugin for UIPlugin {
 }
 
 fn setup_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     resource: Res<ResourceData>,
     data: Res<GameData>,
     button_materials: Res<ButtonMaterials>,
 ) {
+    commands.spawn().insert_bundle(UiCameraBundle::default());
+
     commands
-        .spawn(CameraUiBundle::default())
-        .spawn(NodeBundle {
+        .spawn()
+        .insert_bundle(NodeBundle {
             style: Style {
                 //  100%
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
@@ -37,7 +39,8 @@ fn setup_system(
         .with_children(|parent| {
             // 行1
             parent
-                .spawn(NodeBundle {
+                .spawn()
+                .insert_bundle(NodeBundle {
                     style: Style {
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
@@ -51,7 +54,8 @@ fn setup_system(
                 .with_children(|parent| {
                     // 列1
                     parent
-                        .spawn(NodeBundle {
+                        .spawn()
+                        .insert_bundle(NodeBundle {
                             style: Style {
                                 align_items: AlignItems::Center,
                                 justify_content: JustifyContent::Center,
@@ -63,7 +67,8 @@ fn setup_system(
                         })
                         .with_children(|parent| {
                             parent
-                                .spawn(ButtonBundle {
+                                .spawn()
+                                .insert_bundle(ButtonBundle {
                                     style: Style {
                                         size: Size::new(Val::Px(150.0), Val::Px(65.0)),
                                         // center button
@@ -77,23 +82,27 @@ fn setup_system(
                                     material: button_materials.normal.as_weak(),
                                     ..Default::default()
                                 })
-                                .with(UIBtnNext)
+                                .insert(UIBtnNext)
                                 .with_children(|parent| {
-                                    parent.spawn(TextBundle {
-                                        text: Text {
-                                            value: "btn".to_string(),
-                                            font: resource.ui_font.as_weak(),
-                                            style: TextStyle {
+                                    parent.spawn().insert_bundle(TextBundle {
+                                        text: Text::with_section(
+                                            "btn".to_string(),
+                                            TextStyle {
                                                 font_size: 20.0,
+                                                font: resource.ui_font.as_weak(),
                                                 color: Color::rgb(0.8, 0.8, 0.8),
-                                                alignment: TextAlignment::default(),
                                             },
-                                        },
+                                            TextAlignment::default(),
+                                        ),
                                         ..Default::default()
                                     });
                                 });
-                        })
-                        .spawn(NodeBundle {
+                        });
+
+                    // 列2
+                    parent
+                        .spawn()
+                        .insert_bundle(NodeBundle {
                             style: Style {
                                 align_items: AlignItems::Center,
                                 justify_content: JustifyContent::Center,
@@ -105,21 +114,26 @@ fn setup_system(
                         })
                         .with_children(|parent| {
                             parent
-                                .spawn(TextBundle {
-                                    text: Text {
-                                        value: format!("step:{}", data.step),
-                                        font: resource.ui_font.as_weak(),
-                                        style: TextStyle {
+                                .spawn()
+                                .insert_bundle(TextBundle {
+                                    text: Text::with_section(
+                                        format!("step:{}", data.step),
+                                        TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
-                                            alignment: TextAlignment::default(),
+                                            font: resource.ui_font.as_weak(),
                                         },
-                                    },
+                                        TextAlignment::default(),
+                                    ),
                                     ..Default::default()
                                 })
-                                .with(UIStep);
-                        })
-                        .spawn(NodeBundle {
+                                .insert(UIStep);
+                        });
+
+                    // 列3
+                    parent
+                        .spawn()
+                        .insert_bundle(NodeBundle {
                             style: Style {
                                 align_items: AlignItems::Center,
                                 justify_content: JustifyContent::Center,
@@ -131,22 +145,23 @@ fn setup_system(
                         })
                         .with_children(|parent| {
                             parent
-                                .spawn(TextBundle {
+                                .spawn()
+                                .insert_bundle(TextBundle {
                                     style: Style {
                                         ..Default::default()
                                     },
-                                    text: Text {
-                                        value: format!("p:{}", data.spot),
-                                        font: resource.ui_font.as_weak(),
-                                        style: TextStyle {
+                                    text: Text::with_section(
+                                        format!("p:{}", data.spot),
+                                        TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
-                                            alignment: TextAlignment::default(),
+                                            font: resource.ui_font.as_weak(),
                                         },
-                                    },
+                                        TextAlignment::default(),
+                                    ),
                                     ..Default::default()
                                 })
-                                .with(UISpot);
+                                .insert(UISpot);
                         });
                 });
         });
@@ -154,14 +169,18 @@ fn setup_system(
 
 fn text_system(
     data: Res<GameData>,
-    mut step_query: Query<(&mut Text, &UIStep)>,
-    mut spot_query: Query<(&mut Text, &UISpot)>,
+    // mut step_query: Query<(&mut Text, &UIStep)>,
+    // mut spot_query: Query<(&mut Text, &UISpot)>,
+    mut query: QuerySet<(
+        Query<&mut Text, With<UIStep>>,
+        Query<&mut Text, With<UISpot>>,
+    )>,
 ) {
-    for (mut t, _) in step_query.iter_mut() {
-        t.value = format!("step:{}", data.step);
+    for mut t in query.q0_mut().iter_mut() {
+        t.sections[0].value = format!("step:{}", data.step);
     }
-    for (mut t, _) in spot_query.iter_mut() {
-        t.value = format!("P:{}", data.spot);
+    for mut t in query.q1_mut().iter_mut() {
+        t.sections[0].value = format!("P:{}", data.spot);
     }
 }
 
@@ -171,9 +190,9 @@ pub struct ButtonMaterials {
     pub pressed: Handle<ColorMaterial>,
 }
 
-impl FromResources for ButtonMaterials {
-    fn from_resources(resources: &Resources) -> Self {
-        let mut materials = resources.get_mut::<Assets<ColorMaterial>>().unwrap();
+impl FromWorld for ButtonMaterials {
+    fn from_world(world: &mut World) -> Self {
+        let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
         ButtonMaterials {
             normal: materials.add(Color::rgb(0.02, 0.02, 0.02).into()),
             hovered: materials.add(Color::rgb(0.05, 0.05, 0.05).into()),
@@ -197,7 +216,7 @@ fn button_system(
             &Children,
             &UIBtnNext,
         ),
-        Mutated<Interaction>,
+        Changed<Interaction>,
     >,
     mut text_query: Query<&mut Text>,
 ) {
@@ -205,17 +224,17 @@ fn button_system(
         let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
-                text.value = "Press".to_string();
+                text.sections[0].value = "Press".to_string();
                 *material = button_materials.pressed.as_weak();
                 println!("Press ok");
                 // load map
             }
             Interaction::Hovered => {
-                text.value = "Hover".to_string();
+                text.sections[0].value = "Hover".to_string();
                 *material = button_materials.hovered.as_weak();
             }
             Interaction::None => {
-                text.value = "Button".to_string();
+                text.sections[0].value = "Button".to_string();
                 *material = button_materials.normal.as_weak();
             }
         }

@@ -30,7 +30,7 @@ impl CameraEffectPlugin {
 
 impl Plugin for CameraEffectPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_resource(CameraData {
+        app.insert_resource(CameraData {
             state: CameraState::Normal,
             timer: Timer::new(self.shake_duration, true),
         })
@@ -40,8 +40,11 @@ impl Plugin for CameraEffectPlugin {
     }
 }
 
-fn setup_system(commands: &mut Commands) {
-    commands.spawn(Camera2dBundle::default()).with(CameraTarget);
+fn setup_system(mut commands: Commands) {
+    commands
+        .spawn()
+        .insert_bundle(OrthographicCameraBundle::new_2d())
+        .insert(CameraTarget);
 }
 
 // 抖动原型
@@ -62,7 +65,7 @@ fn camera_shake_system(
             trans.translation.y += y_target;
         }
     }
-    camera_data.timer.tick(time.delta_seconds());
+    camera_data.timer.tick(time.delta());
     if camera_data.timer.finished() {
         camera_data.state = CameraState::Normal;
 
@@ -80,16 +83,25 @@ use crate::components::Player;
 fn camera_follow_system(
     time: Res<Time>,
     camera_data: Res<CameraData>,
-    player_query: Query<(&Player, &Transform)>,
-    mut camera_query: Query<(&CameraTarget, &mut Transform)>,
+    mut query: QuerySet<(
+        Query<&Transform, With<Player>>,
+        Query<&mut Transform, With<CameraTarget>>,
+    )>,
 ) {
     if camera_data.state == CameraState::Follow {
         let delta = time.delta_seconds();
-        for (_, player_trans) in player_query.iter() {
-            for (_, mut camera_trans) in camera_query.iter_mut() {
-                camera_trans.translation.x = player_trans.translation.x * delta;
-                camera_trans.translation.y = player_trans.translation.y * delta;
-            }
+
+        let mut x = 0.0;
+        let mut y = 0.0;
+
+        for player_trans in query.q0().iter() {
+            x = player_trans.translation.x;
+            y = player_trans.translation.y;
+        }
+
+        for mut camera_trans in query.q1_mut().iter_mut() {
+            camera_trans.translation.x = x * delta;
+            camera_trans.translation.y = y * delta;
         }
     }
 }

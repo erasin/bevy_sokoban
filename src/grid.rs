@@ -8,13 +8,13 @@ pub struct GridPlugin;
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(setup_system.system())
-            .add_resource(Grid(10, 10));
+            .insert_resource(Grid(10, 10));
     }
 }
 
 // 绘制网格
 fn setup_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     grid: Res<Grid>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
@@ -29,7 +29,7 @@ fn setup_system(
 
     for i in 0..=row_count {
         let j = i as f32;
-        commands.spawn(SpriteBundle {
+        commands.spawn().insert_bundle(SpriteBundle {
             material: line_color.as_weak(),
             transform: Transform::from_translation(Vec3::new(
                 def_width * j - b_x / 2.0 - j,
@@ -39,6 +39,7 @@ fn setup_system(
             sprite: Sprite {
                 size: Vec2::new(2.0, bounds.y),
                 resize_mode: SpriteResizeMode::Automatic,
+                ..Default::default()
             },
             ..Default::default()
         });
@@ -46,7 +47,7 @@ fn setup_system(
 
     for i in 0..col_count {
         let j = i as f32;
-        commands.spawn(SpriteBundle {
+        commands.spawn().insert_bundle(SpriteBundle {
             material: line_color.as_weak(),
             transform: Transform::from_translation(Vec3::new(
                 0.0,
@@ -56,6 +57,7 @@ fn setup_system(
             sprite: Sprite {
                 size: Vec2::new(bounds.x, 2.0),
                 resize_mode: SpriteResizeMode::Automatic,
+                ..Default::default()
             },
             ..Default::default()
         });

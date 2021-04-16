@@ -63,10 +63,14 @@ pub fn player_movement_system(
     input: Res<Input<KeyCode>>,
     map: Res<Map>,
     mut data: ResMut<GameData>,
-    mut player_query: Query<(Entity, &mut Position, &mut Player)>,
-    immovable_query: Query<(Entity, &Position, &Immovable)>,
-    mut moveable_query: Query<(Entity, &mut Position, &Movable), Without<Player>>,
-    // mut camera: Query<(&mut Translation, &Camera)>,
+    // mut player_query: Query<(Entity, &mut Position, &mut Player)>,
+    // immovable_query: Query<(Entity, &Position, &Immovable)>,
+    // mut moveable_query: Query<(Entity, &mut Position, &Movable), Without<Player>>,
+    mut query: QuerySet<(
+        Query<(Entity, &mut Position, &mut Player)>,
+        Query<(Entity, &Position, &Immovable)>,
+        Query<(Entity, &mut Position, &Movable), Without<Player>>,
+    )>,
 ) {
     // let _delta_seconds = f32::min(0.2, time.delta_seconds);
 
@@ -94,20 +98,22 @@ pub fn player_movement_system(
     // 移动链对象
     let mut to_move = HashSet::new();
 
-    for (entity, mut pos, mut _per) in player_query.iter_mut() {
+    // 所有可移动
+    let mov: HashMap<(i32, i32), u32> = query
+        .q2_mut()
+        .iter_mut()
+        .map(|(e, p, _)| ((p.x, p.y), e.id()))
+        .collect::<HashMap<_, _>>();
+
+    // 所有不可移动
+    let immvo: HashMap<(i32, i32), u32> = query
+        .q1()
+        .iter()
+        .map(|(e, p, _)| ((p.x, p.y), e.id()))
+        .collect::<HashMap<_, _>>();
+
+    for (entity, mut pos, mut _per) in query.q0_mut().iter_mut() {
         to_move.insert(entity.id());
-
-        // 所有可移动
-        let mov: HashMap<(i32, i32), u32> = moveable_query
-            .iter_mut()
-            .map(|(e, p, _)| ((p.x, p.y), e.id()))
-            .collect::<HashMap<_, _>>();
-
-        // 所有不可移动
-        let immvo: HashMap<(i32, i32), u32> = immovable_query
-            .iter()
-            .map(|(e, p, _)| ((p.x, p.y), e.id()))
-            .collect::<HashMap<_, _>>();
 
         // 移动方向链存储器
         let (start, end, is_x) = match vol {
@@ -161,7 +167,7 @@ pub fn player_movement_system(
     }
 
     // 移动移动对象
-    for (e, mut pos, _) in moveable_query.iter_mut() {
+    for (e, mut pos, _) in query.q2_mut().iter_mut() {
         if to_move.remove(&e.id()) {
             *pos = *pos + vol;
         }
@@ -170,10 +176,10 @@ pub fn player_movement_system(
 
 // 完成处理
 pub fn box_spot_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     _resource: Res<ResourceData>,
     mut data: ResMut<GameData>,
-    mut events: ResMut<Events<MyEvent>>,
+    mut events: EventWriter<MyEvent>,
     mut box_entity: Query<(
         Entity,
         &Position,
@@ -187,8 +193,9 @@ pub fn box_spot_system(
         if !pse.ok {
             for (e, pb, b, mut sprite, mut texture) in box_entity.iter_mut() {
                 if ps == pb {
-                    commands.remove_one::<Movable>(e);
-                    commands.insert_one(e, Immovable);
+                    commands.entity(e).remove::<Movable>().insert(Immovable);
+                    // commands.remove_one::<Movable>(e);
+                    // commands.insert_one(e, Immovable);
                     sprite.index = b.sprite_ok.1;
                     *texture = b.sprite_ok.0.as_weak();
                     pse.ok = true;
