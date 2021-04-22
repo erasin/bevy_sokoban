@@ -46,21 +46,7 @@ impl Plugin for Plugins {
             .add_plugin(UIPlugin)
             .add_plugin(PlayPlugin)
             .init_resource::<GameData>()
-        // .add_event::<MyEvent>()
-        // // .add_plugin(ResourcePlugin::default())
-        // .add_plugin(CameraEffectPlugin::new(0.5))
-        // .add_plugin(UIPlugin::default())
-        // .add_plugin(DebugPlugin::default())
-        // // .add_plugin(GridPlugin::default())
-        // .add_plugin(MapPlugin::default())
-    // .add_startup_system(setup.system())
-    // .add_system(animate_sprite_system.system())
-    // .add_system(box_spot_system.system())
-    // .add_system(player_movement_system.system())
-    // .add_system(position_system.system())
-    // .add_system(scoreboard_system.system())
-    // .add_system(event_listener_system.system());
-
+            .add_plugin(DebugPlugin)
         ;
     }
 }
