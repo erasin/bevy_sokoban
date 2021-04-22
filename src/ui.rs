@@ -1,5 +1,5 @@
-use crate::data::*;
-use crate::resources::*;
+use crate::loading::FontAssets;
+use crate::{data::*, state::GameState};
 use bevy::prelude::*;
 
 #[derive(Default)]
@@ -8,17 +8,22 @@ pub struct UIPlugin;
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ButtonMaterials>()
-            .add_startup_system(setup_system.system())
-            .add_system(button_system.system())
-            .add_system(text_system.system());
+            .add_system_set(
+                SystemSet::on_enter(GameState::Playing).with_system(setup_system.system()),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(button_system.system())
+                    .with_system(text_system.system()),
+            );
     }
 }
 
 fn setup_system(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    resource: Res<ResourceData>,
     data: Res<GameData>,
+    font: Res<FontAssets>,
     button_materials: Res<ButtonMaterials>,
 ) {
     commands.spawn().insert_bundle(UiCameraBundle::default());
@@ -89,7 +94,7 @@ fn setup_system(
                                             "btn".to_string(),
                                             TextStyle {
                                                 font_size: 20.0,
-                                                font: resource.ui_font.as_weak(),
+                                                font: font.font_ui.as_weak(),
                                                 color: Color::rgb(0.8, 0.8, 0.8),
                                             },
                                             TextAlignment::default(),
@@ -121,7 +126,7 @@ fn setup_system(
                                         TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
-                                            font: resource.ui_font.as_weak(),
+                                            font: font.font_ui.as_weak(),
                                         },
                                         TextAlignment::default(),
                                     ),
@@ -155,7 +160,7 @@ fn setup_system(
                                         TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
-                                            font: resource.ui_font.as_weak(),
+                                            font: font.font_ui.as_weak(),
                                         },
                                         TextAlignment::default(),
                                     ),

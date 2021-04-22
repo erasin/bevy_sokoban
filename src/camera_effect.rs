@@ -35,8 +35,11 @@ impl Plugin for CameraEffectPlugin {
             timer: Timer::new(self.shake_duration, true),
         })
         .add_startup_system(setup_system.system())
-        .add_system(camera_shake_system.system())
-        .add_system(camera_follow_system.system());
+        .add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(camera_shake_system.system())
+                .with_system(camera_follow_system.system()),
+        );
     }
 }
 
@@ -55,8 +58,8 @@ fn camera_shake_system(
 ) {
     if camera_data.state == CameraState::Shake {
         let mut rng = thread_rng();
-        let x_target: f32 = rng.gen_range(-20.0, 20.0);
-        let y_target: f32 = rng.gen_range(-20.0, 20.0);
+        let x_target: f32 = rng.gen_range(-20.0..20.0);
+        let y_target: f32 = rng.gen_range(-20.0..20.0);
 
         for (_, mut trans) in query.iter_mut() {
             // if camera.name.eq(&Some("Camera2d".to_string())) {
@@ -76,7 +79,7 @@ fn camera_shake_system(
     }
 }
 
-use crate::components::Player;
+use crate::{components::Player, state::GameState};
 
 // 中心跟随
 // 矩形跟随

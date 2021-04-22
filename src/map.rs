@@ -1,6 +1,6 @@
-use crate::components::*;
-use crate::resources::*;
+use crate::loading::TextureAssets;
 use crate::SCALE;
+use crate::{components::*, state::GameState};
 
 use bevy::prelude::*;
 use std::fs::File;
@@ -12,8 +12,11 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<Map>()
-            .add_system(reload_system.system());
+        app.init_resource::<Map>().add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(reload_system.system())
+                .label("loadmap"),
+        );
     }
 }
 
@@ -51,7 +54,7 @@ impl Map {
     }
 
     /// 渲染处理
-    pub fn render(&self, mut commands: Commands, resource: Res<ResourceData>) {
+    pub fn render(&self, mut commands: Commands, resource: Res<TextureAssets>) {
         for (y, row) in self.tides.iter().rev().enumerate() {
             for (x, column) in row.iter().enumerate() {
                 let pos = Position {
@@ -66,7 +69,7 @@ impl Map {
                         commands
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                texture_atlas: resource.texture_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
@@ -79,7 +82,7 @@ impl Map {
                         commands
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                texture_atlas: resource.texture_sheet.as_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
                                     rotation: Quat::IDENTITY,
@@ -97,7 +100,7 @@ impl Map {
                             // floor
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                texture_atlas: resource.texture_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
@@ -108,7 +111,7 @@ impl Map {
                         commands
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_player.as_weak(),
+                                texture_atlas: resource.texture_player.as_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
                                     rotation: Quat::IDENTITY,
@@ -125,7 +128,7 @@ impl Map {
                         commands
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                texture_atlas: resource.texture_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
@@ -137,7 +140,7 @@ impl Map {
                         commands
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_box_blue.as_weak(),
+                                texture_atlas: resource.texture_box_blue.as_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 2.0),
                                     rotation: Quat::IDENTITY,
@@ -148,7 +151,7 @@ impl Map {
                             .insert(Timer::from_seconds(0.5, true))
                             .insert(pos.clone())
                             .insert(Box {
-                                sprite_ok: (resource.texture_atlas_sheet.as_weak(), 4),
+                                sprite_ok: (resource.texture_sheet.as_weak(), 4),
                             })
                             .insert(Movable);
                     }
@@ -157,7 +160,7 @@ impl Map {
                         commands
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                texture_atlas: resource.texture_sheet.as_weak(),
                                 transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
@@ -169,7 +172,7 @@ impl Map {
                         commands
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: resource.texture_atlas_sheet.as_weak(),
+                                texture_atlas: resource.texture_sheet.as_weak(),
                                 sprite: TextureAtlasSprite::new(2),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 0.1),
@@ -201,12 +204,12 @@ mod test {
     }
 }
 
-// change map
+/// 加载地图
 fn reload_system(
     mut commands: Commands,
     mut map: ResMut<Map>,
     input: Res<Input<KeyCode>>,
-    resource: Res<ResourceData>,
+    resource: Res<TextureAssets>,
     pos_query: Query<(Entity, &Position)>,
 ) {
     let mut map_file = "";

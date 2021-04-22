@@ -1,12 +1,30 @@
-use crate::components::*;
 use crate::data::*;
 use crate::events::*;
+use crate::loading::AudioAssets;
 use crate::map::*;
-use crate::resources::*;
+use crate::{components::*, state::GameState};
 use crate::{SCALE, TILED_WIDTH};
 use bevy::{math::vec2, prelude::*};
 use std::collections::HashMap;
 use std::collections::HashSet;
+
+#[derive(Default)]
+pub struct PlayPlugin;
+
+impl Plugin for PlayPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.add_event::<MyEvent>().add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .after("loadmap")
+                .with_system(animate_sprite_system.system())
+                .with_system(box_spot_system.system())
+                .with_system(player_movement_system.system())
+                .with_system(position_system.system())
+                .with_system(scoreboard_system.system())
+                .with_system(event_listener_system.system()),
+        );
+    }
+}
 
 /// 镜头处理
 // pub fn camera_system(map: Res<Map>, mut query: Query<(&Camera, &mut Transform)>) {
@@ -59,7 +77,7 @@ pub fn position_system(map: Res<Map>, mut query: Query<(&mut Position, &mut Tran
 pub fn player_movement_system(
     // time: Res<Time>,
     radio: Res<Audio>,
-    resource: Res<ResourceData>,
+    audio_assets: Res<AudioAssets>,
     input: Res<Input<KeyCode>>,
     map: Res<Map>,
     mut data: ResMut<GameData>,
@@ -147,7 +165,7 @@ pub fn player_movement_system(
             match mov.get(&p2) {
                 Some(id) => to_move.insert(*id),
                 None => {
-                    radio.play(resource.music_wall.as_weak());
+                    radio.play(audio_assets.audio_wall.as_weak());
                     // 查询不可移动，清空队列
                     match immvo.get(&p2) {
                         Some(_) => to_move.clear(),
@@ -177,7 +195,6 @@ pub fn player_movement_system(
 // 完成处理
 pub fn box_spot_system(
     mut commands: Commands,
-    _resource: Res<ResourceData>,
     mut data: ResMut<GameData>,
     mut events: EventWriter<MyEvent>,
     mut box_entity: Query<(

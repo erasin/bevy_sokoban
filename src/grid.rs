@@ -1,5 +1,5 @@
-use crate::SCALE;
 use crate::TILED_WIDTH;
+use crate::{state::GameState, SCALE};
 use bevy::prelude::*;
 pub struct Grid(pub i32, pub i32);
 #[derive(Default)]
@@ -7,8 +7,9 @@ pub struct GridPlugin;
 
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(setup_system.system())
-            .insert_resource(Grid(10, 10));
+        app.insert_resource(Grid(10, 10)).add_system_set(
+            SystemSet::on_enter(GameState::Playing).with_system(setup_system.system()),
+        );
     }
 }
 
