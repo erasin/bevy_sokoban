@@ -18,7 +18,7 @@ impl Plugin for PlayPlugin {
                 .after("loadmap")
                 .with_system(animate_sprite_system.system())
                 .with_system(box_spot_system.system())
-                .with_system(player_movement_system.system())
+                .after("action")
                 .with_system(position_system.system())
                 .with_system(scoreboard_system.system())
                 .with_system(event_listener_system.system()),
@@ -73,9 +73,12 @@ pub fn position_system(map: Res<Map>, mut query: Query<(&mut Position, &mut Tran
     }
 }
 
+use crate::actions::Actions;
+
 ///  移动
 pub fn player_movement_system(
     // time: Res<Time>,
+    actions: Res<Actions>,
     radio: Res<Audio>,
     audio_assets: Res<AudioAssets>,
     input: Res<Input<KeyCode>>,
@@ -94,18 +97,24 @@ pub fn player_movement_system(
 
     let mut vol = Position { x: 0, y: 0 };
 
-    if input.just_released(KeyCode::Up) {
-        vol.y = 1;
+    if actions.player_movement.is_none() {
+        return;
     }
-    if input.just_released(KeyCode::Down) {
-        vol.y = -1;
-    }
-    if input.just_released(KeyCode::Right) {
-        vol.x = 1;
-    }
-    if input.just_released(KeyCode::Left) {
-        vol.x = -1;
-    }
+    vol.x = actions.player_movement.unwrap().x as i32;
+    vol.y = actions.player_movement.unwrap().y as i32;
+
+    // if input.just_released(KeyCode::Up) {
+    //     vol.y = 1;
+    // }
+    // if input.just_released(KeyCode::Down) {
+    //     vol.y = -1;
+    // }
+    // if input.just_released(KeyCode::Right) {
+    //     vol.x = 1;
+    // }
+    // if input.just_released(KeyCode::Left) {
+    //     vol.x = -1;
+    // }
 
     // println!("1 {:?} ", vol);
     if vol == Position::default() {

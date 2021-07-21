@@ -1,6 +1,7 @@
 mod loading;
 mod menu;
 
+mod actions;
 pub mod camera_effect;
 pub mod components;
 pub mod data;
@@ -14,6 +15,7 @@ pub mod ui;
 
 use bevy::prelude::*;
 
+use actions::ActionsPlugin;
 use camera_effect::*;
 use data::*;
 use debug::DebugPlugin;
@@ -44,9 +46,9 @@ impl Plugin for Plugins {
             .add_plugin(MapPlugin)
             .add_plugin(CameraEffectPlugin::new(0.5))
             .add_plugin(UIPlugin)
+            .add_plugin(ActionsPlugin)
             .add_plugin(PlayPlugin)
             .init_resource::<GameData>()
-            .add_plugin(DebugPlugin)
-        ;
+            .add_plugin(DebugPlugin);
     }
 }
