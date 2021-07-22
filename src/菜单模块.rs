@@ -1,16 +1,16 @@
-use crate::loading::FontAssets;
-use crate::GameState;
+use crate::全局状态;
+use crate::加载模块::FontAssets;
 use bevy::prelude::*;
 
 /// 菜单组件
-pub struct MenuPlugin;
+pub struct 菜单组件;
 
-impl Plugin for MenuPlugin {
+impl Plugin for 菜单组件 {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ButtonMaterials>()
-            .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(setup_menu.system()))
+            .add_system_set(SystemSet::on_enter(全局状态::菜单).with_system(初始化处理.system()))
             .add_system_set(
-                SystemSet::on_update(GameState::Menu).with_system(click_play_button.system()),
+                SystemSet::on_update(全局状态::菜单).with_system(点击开始按钮处理.system()),
             );
     }
 }
@@ -34,15 +34,15 @@ impl FromWorld for ButtonMaterials {
 }
 
 /// 按钮
-struct PlayButton;
+struct 开始按钮;
 
-fn setup_menu(
-    mut commands: Commands,
+fn 初始化处理(
+    mut 指令: Commands,
     font: Res<FontAssets>,
     button_materials: Res<ButtonMaterials>,
 ) {
-    commands.spawn_bundle(UiCameraBundle::default());
-    commands
+    指令.spawn_bundle(UiCameraBundle::default());
+    指令
         .spawn_bundle(ButtonBundle {
             style: Style {
                 size: Size::new(Val::Px(120.0), Val::Px(50.0)),
@@ -54,7 +54,7 @@ fn setup_menu(
             material: button_materials.normal.clone(),
             ..Default::default()
         })
-        .insert(PlayButton)
+        .insert(开始按钮)
         .with_children(|parent| {
             parent.spawn_bundle(TextBundle {
                 text: Text {
@@ -73,10 +73,10 @@ fn setup_menu(
         });
 }
 
-fn click_play_button(
+fn 点击开始按钮处理(
     mut commands: Commands,
     button_materials: Res<ButtonMaterials>,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<State<全局状态>>,
     mut interaction_query: Query<
         (Entity, &Interaction, &mut Handle<ColorMaterial>, &Children),
         Changed<Interaction>,
@@ -89,7 +89,7 @@ fn click_play_button(
             Interaction::Clicked => {
                 commands.entity(button).despawn();
                 commands.entity(text).despawn();
-                state.set(GameState::Playing).unwrap();
+                state.set(全局状态::游戏中).unwrap();
             }
             Interaction::Hovered => {
                 *material = button_materials.hovered.clone();

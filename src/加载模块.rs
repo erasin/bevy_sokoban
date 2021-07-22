@@ -1,27 +1,38 @@
-mod paths;
-
-use crate::loading::paths::PATHS;
-use crate::GameState;
+use crate::全局状态;
 
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy_kira_audio::AudioSource;
 
-pub struct LoadingPlugin;
+pub struct AssetPaths {
+    pub font_ui: &'static str,
+    pub audio_wall: &'static str,
+    pub texture_sheet: &'static str,
+    pub texture_player: &'static str,
+    pub texture_box_blue: &'static str,
+}
 
-impl Plugin for LoadingPlugin {
+pub const PATHS: AssetPaths = AssetPaths {
+    font_ui: "fonts/KenneyFuture.ttf",
+    audio_wall: "sounds/wall.wav",
+    texture_sheet: "textures/sheet.png",
+    texture_player: "textures/player_sheet.png",
+    texture_box_blue: "textures/box_blue_sheet.png",
+};
+
+pub struct 加载素材库插件;
+
+impl Plugin for 加载素材库插件 {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_system_set(
-            SystemSet::on_enter(GameState::Loading).with_system(start_loading.system()),
-        )
-        .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_state.system()));
+        app.add_system_set(SystemSet::on_enter(全局状态::加载中).with_system(开始加载.system()))
+            .add_system_set(SystemSet::on_update(全局状态::加载中).with_system(检查变动.system()));
     }
 }
 
 pub struct LoadingState {
-    textures: Vec<HandleUntyped>,
-    fonts: Vec<HandleUntyped>,
-    audio: Vec<HandleUntyped>,
+    材质: Vec<HandleUntyped>,
+    字体: Vec<HandleUntyped>,
+    音频: Vec<HandleUntyped>,
 }
 
 pub struct FontAssets {
@@ -33,12 +44,12 @@ pub struct AudioAssets {
 }
 
 pub struct TextureAssets {
-    pub texture_sheet: Handle<TextureAtlas>,
-    pub texture_player: Handle<TextureAtlas>,
-    pub texture_box_blue: Handle<TextureAtlas>,
+    pub 纹理表: Handle<TextureAtlas>,
+    pub 用户: Handle<TextureAtlas>,
+    pub 蓝箱子: Handle<TextureAtlas>,
 }
 
-fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn 开始加载(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut fonts: Vec<HandleUntyped> = vec![];
     fonts.push(asset_server.load_untyped(PATHS.font_ui));
 
@@ -51,31 +62,31 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     textures.push(asset_server.load_untyped(PATHS.texture_box_blue));
 
     commands.insert_resource(LoadingState {
-        textures,
-        fonts,
-        audio,
+        材质: textures,
+        字体: fonts,
+        音频: audio,
     });
 }
 
-fn check_state(
+fn 检查变动(
     mut commands: Commands,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<State<全局状态>>,
     asset_server: Res<AssetServer>,
     loading_state: Res<LoadingState>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     if LoadState::Loaded
-        != asset_server.get_group_load_state(loading_state.fonts.iter().map(|handle| handle.id))
+        != asset_server.get_group_load_state(loading_state.字体.iter().map(|handle| handle.id))
     {
         return;
     }
     if LoadState::Loaded
-        != asset_server.get_group_load_state(loading_state.textures.iter().map(|handle| handle.id))
+        != asset_server.get_group_load_state(loading_state.材质.iter().map(|handle| handle.id))
     {
         return;
     }
     if LoadState::Loaded
-        != asset_server.get_group_load_state(loading_state.audio.iter().map(|handle| handle.id))
+        != asset_server.get_group_load_state(loading_state.音频.iter().map(|handle| handle.id))
     {
         return;
     }
@@ -105,10 +116,10 @@ fn check_state(
     let texture_atlas_box_blue = texture_atlases.add(texture_atlas);
 
     commands.insert_resource(TextureAssets {
-        texture_sheet: texture_atlas_sheet,
-        texture_player: texture_atlas_player,
-        texture_box_blue: texture_atlas_box_blue,
+        纹理表: texture_atlas_sheet,
+        用户: texture_atlas_player,
+        蓝箱子: texture_atlas_box_blue,
     });
 
-    state.set(GameState::Menu).unwrap();
+    state.set(全局状态::菜单).unwrap();
 }

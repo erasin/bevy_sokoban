@@ -1,20 +1,19 @@
 use crate::TILED_WIDTH;
-use crate::{state::GameState, SCALE};
+use crate::{state::全局状态, SCALE};
 use bevy::prelude::*;
 pub struct Grid(pub i32, pub i32);
 #[derive(Default)]
-pub struct GridPlugin;
+pub struct 网格插件;
 
-impl Plugin for GridPlugin {
+impl Plugin for 网格插件 {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(Grid(10, 10)).add_system_set(
-            SystemSet::on_enter(GameState::Playing).with_system(setup_system.system()),
-        );
+        app.insert_resource(Grid(10, 10))
+            .add_system_set(SystemSet::on_enter(全局状态::游戏中).with_system(初始化处理.system()));
     }
 }
 
 // 绘制网格
-fn setup_system(
+fn 初始化处理(
     mut commands: Commands,
     grid: Res<Grid>,
     mut materials: ResMut<Assets<ColorMaterial>>,

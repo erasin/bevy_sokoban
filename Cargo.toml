@@ -5,7 +5,7 @@ authors = ["erasin <erasinoo@gmail.com>"]
 edition = "2018"
 
 [[bin]]
-name = "sokoban"
+name = "推箱子"
 path = "src/main.rs"
 
 [lib]

@@ -1,5 +1,4 @@
-use crate::loading::FontAssets;
-use crate::{data::*, state::GameState};
+use crate::{加载模块::FontAssets, 数据模块::*, 状态模块::全局状态};
 use bevy::prelude::*;
 
 #[derive(Default)]
@@ -8,21 +7,19 @@ pub struct UIPlugin;
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ButtonMaterials>()
+            .add_system_set(SystemSet::on_enter(全局状态::游戏中).with_system(初始化处理.system()))
             .add_system_set(
-                SystemSet::on_enter(GameState::Playing).with_system(setup_system.system()),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Playing)
-                    .with_system(button_system.system())
-                    .with_system(text_system.system()),
+                SystemSet::on_update(全局状态::游戏中)
+                    .with_system(按钮处理.system())
+                    .with_system(文本变动.system()),
             );
     }
 }
 
-fn setup_system(
+fn 初始化处理(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    data: Res<GameData>,
+    data: Res<全局数据>,
     font: Res<FontAssets>,
     button_materials: Res<ButtonMaterials>,
 ) {
@@ -122,7 +119,7 @@ fn setup_system(
                                 .spawn()
                                 .insert_bundle(TextBundle {
                                     text: Text::with_section(
-                                        format!("step:{}", data.step),
+                                        format!("step:{}", data.计步数),
                                         TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
@@ -156,7 +153,7 @@ fn setup_system(
                                         ..Default::default()
                                     },
                                     text: Text::with_section(
-                                        format!("p:{}", data.spot),
+                                        format!("p:{}", data.踩点),
                                         TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
@@ -172,8 +169,8 @@ fn setup_system(
         });
 }
 
-fn text_system(
-    data: Res<GameData>,
+fn 文本变动(
+    data: Res<全局数据>,
     // mut step_query: Query<(&mut Text, &UIStep)>,
     // mut spot_query: Query<(&mut Text, &UISpot)>,
     mut query: QuerySet<(
@@ -182,10 +179,10 @@ fn text_system(
     )>,
 ) {
     for mut t in query.q0_mut().iter_mut() {
-        t.sections[0].value = format!("step:{}", data.step);
+        t.sections[0].value = format!("step:{}", data.计步数);
     }
     for mut t in query.q1_mut().iter_mut() {
-        t.sections[0].value = format!("P:{}", data.spot);
+        t.sections[0].value = format!("P:{}", data.踩点);
     }
 }
 
@@ -209,9 +206,8 @@ impl FromWorld for ButtonMaterials {
 pub struct UIStep;
 pub struct UISpot;
 pub struct UIBtnNext;
-pub struct UIBtnPrev;
 
-fn button_system(
+fn 按钮处理(
     button_materials: Res<ButtonMaterials>,
     mut interaction_query: Query<
         (

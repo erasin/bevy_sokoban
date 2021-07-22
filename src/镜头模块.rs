@@ -1,3 +1,4 @@
+use crate::{状态模块::全局状态, 组件模块::玩家};
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 use std::time::Duration;
@@ -5,58 +6,58 @@ use std::time::Duration;
 pub struct CameraTarget;
 
 #[derive(PartialEq)]
-pub enum CameraState {
-    Normal,
-    Shake,
-    Follow, // 用户跟随
+pub enum 镜头状态 {
+    正常,
+    抖动,
+    跟随, // 用户跟随
 }
 
-pub struct CameraData {
-    pub state: CameraState,
-    pub timer: Timer,
+pub struct 镜头数据 {
+    pub 状态: 镜头状态,
+    pub 计时器: Timer,
 }
 
-pub struct CameraEffectPlugin {
+pub struct 镜头特效插件 {
     shake_duration: Duration,
 }
 
-impl CameraEffectPlugin {
+impl 镜头特效插件 {
     pub fn new(seconds: f32) -> Self {
-        CameraEffectPlugin {
+        镜头特效插件 {
             shake_duration: Duration::from_secs_f32(seconds),
         }
     }
 }
 
-impl Plugin for CameraEffectPlugin {
+impl Plugin for 镜头特效插件 {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(CameraData {
-            state: CameraState::Normal,
-            timer: Timer::new(self.shake_duration, true),
+        app.insert_resource(镜头数据 {
+            状态: 镜头状态::正常,
+            计时器: Timer::new(self.shake_duration, true),
         })
-        .add_startup_system(setup_system.system())
+        .add_startup_system(初始化处理.system())
         .add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(camera_shake_system.system())
-                .with_system(camera_follow_system.system()),
+            SystemSet::on_update(全局状态::游戏中)
+                .with_system(镜头抖动处理.system())
+                .with_system(镜头跟随处理.system()),
         );
     }
 }
 
-fn setup_system(mut commands: Commands) {
-    commands
+fn 初始化处理(mut 指令: Commands) {
+    指令
         .spawn()
         .insert_bundle(OrthographicCameraBundle::new_2d())
         .insert(CameraTarget);
 }
 
 // 抖动原型
-fn camera_shake_system(
-    time: Res<Time>,
-    mut camera_data: ResMut<CameraData>,
+fn 镜头抖动处理(
+    系统时间: Res<Time>,
+    mut 当前镜头: ResMut<镜头数据>,
     mut query: Query<(&CameraTarget, &mut Transform)>,
 ) {
-    if camera_data.state == CameraState::Shake {
+    if 当前镜头.状态 == 镜头状态::抖动 {
         let mut rng = thread_rng();
         let x_target: f32 = rng.gen_range(-20.0..20.0);
         let y_target: f32 = rng.gen_range(-20.0..20.0);
@@ -68,9 +69,9 @@ fn camera_shake_system(
             trans.translation.y += y_target;
         }
     }
-    camera_data.timer.tick(time.delta());
-    if camera_data.timer.finished() {
-        camera_data.state = CameraState::Normal;
+    当前镜头.计时器.tick(系统时间.delta());
+    if 当前镜头.计时器.finished() {
+        当前镜头.状态 = 镜头状态::正常;
 
         for (_, mut trans) in query.iter_mut() {
             trans.translation.x = 0.0;
@@ -79,20 +80,18 @@ fn camera_shake_system(
     }
 }
 
-use crate::{components::Player, state::GameState};
-
 // 中心跟随
 // 矩形跟随
-fn camera_follow_system(
-    time: Res<Time>,
-    camera_data: Res<CameraData>,
+fn 镜头跟随处理(
+    系统时间: Res<Time>,
+    当前镜头: Res<镜头数据>,
     mut query: QuerySet<(
-        Query<&Transform, With<Player>>,
+        Query<&Transform, With<玩家>>,
         Query<&mut Transform, With<CameraTarget>>,
     )>,
 ) {
-    if camera_data.state == CameraState::Follow {
-        let delta = time.delta_seconds();
+    if 当前镜头.状态 == 镜头状态::跟随 {
+        let delta = 系统时间.delta_seconds();
 
         let mut x = 0.0;
         let mut y = 0.0;

@@ -16,6 +16,6 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(sokoban::Plugins);
+        .add_plugin(sokoban::组件集合);
     app.run();
 }

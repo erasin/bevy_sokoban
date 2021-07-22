@@ -2,55 +2,55 @@ use bevy::prelude::*;
 use std::ops::{Add, Sub};
 
 /// 用户
-pub struct Player;
+pub struct 玩家;
 
 /// 箱子
-pub struct Box {
+pub struct 箱子 {
     pub sprite_ok: (Handle<TextureAtlas>, u32),
 }
 
 /// 目标点
-pub struct BoxSpot {
-    pub ok: bool,
+pub struct 目标点 {
+    pub 到达: bool,
 }
 
 /// 石头
 // struct Stone {}
 
 /// 墙
-pub struct Wall;
+pub struct 墙体;
 
 // 地板
-pub struct Floor;
+pub struct 地板;
 
-pub struct Movable;
+pub struct 可移动的;
 
-pub struct Immovable;
+pub struct 不可移动的;
 
 // use std::cmp::Eq;
 
 #[derive(Debug, PartialEq, Copy, Clone, Default)]
-pub struct Position {
+pub struct 坐标 {
     pub x: i32,
     pub y: i32,
 }
 
-impl Add for Position {
-    type Output = Position;
+impl Add for 坐标 {
+    type Output = 坐标;
 
-    fn add(self, other: Position) -> Position {
-        Position {
+    fn add(self, other: 坐标) -> 坐标 {
+        坐标 {
             x: self.x + other.x,
             y: self.y + other.y,
         }
     }
 }
 
-impl Sub for Position {
-    type Output = Position;
+impl Sub for 坐标 {
+    type Output = 坐标;
 
-    fn sub(self, other: Position) -> Position {
-        Position {
+    fn sub(self, other: 坐标) -> 坐标 {
+        坐标 {
             x: self.x - other.x,
             y: self.y - other.y,
         }
