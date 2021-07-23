@@ -1,6 +1,7 @@
 use crate::全局状态;
 
 use bevy::{
+    core::FixedTimestep,
     input::gamepad::{Gamepad, GamepadButton, GamepadEvent, GamepadEventType},
     prelude::*,
     utils::HashSet,
@@ -15,6 +16,7 @@ impl Plugin for 控制插件 {
             .add_system_to_stage(CoreStage::PreUpdate, 手柄连接处理.system())
             .add_system_set(
                 SystemSet::on_update(全局状态::游戏中)
+                    .with_run_criteria(FixedTimestep::step(0.55))
                     .with_system(键盘处理.system())
                     .label("action"),
             );

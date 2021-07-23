@@ -1,5 +1,5 @@
 use crate::全局状态;
-use crate::加载模块::AudioAssets;
+use crate::加载模块::音频素材;
 use crate::行为模块::动作集;
 
 use bevy::prelude::*;
@@ -25,7 +25,7 @@ struct AudioChannels {
     flying: AudioChannel,
 }
 
-fn start_audio(audio_assets: Res<AudioAssets>, audio: Res<Audio>, channels: Res<AudioChannels>) {
+fn start_audio(audio_assets: Res<音频素材>, audio: Res<Audio>, channels: Res<AudioChannels>) {
     audio.set_volume_in_channel(0.3, &channels.flying);
     audio.play_looped_in_channel(audio_assets.audio_wall.clone(), &channels.flying);
     audio.pause_channel(&channels.flying);

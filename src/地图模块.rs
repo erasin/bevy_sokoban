@@ -1,5 +1,5 @@
 use crate::SCALE;
-use crate::{加载模块::TextureAssets, 状态模块::全局状态, 组件模块::*};
+use crate::{加载模块::纹理素材, 状态模块::全局状态, 组件模块::*};
 
 use bevy::prelude::*;
 use std::fs::File;
@@ -53,7 +53,7 @@ impl 地图数据 {
     }
 
     /// 渲染处理
-    pub fn 渲染处理(&self, mut 指令: Commands, 素材: Res<TextureAssets>) {
+    pub fn 渲染处理(&self, mut 指令: Commands, 素材: Res<纹理素材>) {
         for (y, row) in self.tides.iter().rev().enumerate() {
             for (x, column) in row.iter().enumerate() {
                 let 当前坐标 = 坐标 {
@@ -208,7 +208,7 @@ fn 加载处理(
     mut 指令: Commands,
     mut 地图资源: ResMut<地图数据>,
     键位: Res<Input<KeyCode>>,
-    素材: Res<TextureAssets>,
+    素材: Res<纹理素材>,
     pos_query: Query<(Entity, &坐标)>,
 ) {
     let mut map_file = "";

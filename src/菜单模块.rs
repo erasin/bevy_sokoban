@@ -1,5 +1,5 @@
 use crate::全局状态;
-use crate::加载模块::FontAssets;
+use crate::加载模块::字体素材;
 use bevy::prelude::*;
 
 /// 菜单组件
@@ -38,7 +38,7 @@ struct 开始按钮;
 
 fn 初始化处理(
     mut 指令: Commands,
-    font: Res<FontAssets>,
+    font: Res<字体素材>,
     button_materials: Res<ButtonMaterials>,
 ) {
     指令.spawn_bundle(UiCameraBundle::default());

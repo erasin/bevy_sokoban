@@ -1,0 +1,64 @@
+{
+	// 使用 IntelliSense 了解相关属性。 
+	// 悬停以查看现有属性的描述。
+	// 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in library 'sokoban'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--lib",
+					"--package=bevy-sokoban"
+				],
+				"filter": {
+					"name": "sokoban",
+					"kind": "lib"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug executable '推箱子'",
+			"cargo": {
+				"args": [
+					"build",
+					"--bin=推箱子",
+					"--package=bevy-sokoban"
+				],
+				"filter": {
+					"name": "推箱子",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in executable '推箱子'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--bin=推箱子",
+					"--package=bevy-sokoban"
+				],
+				"filter": {
+					"name": "推箱子",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		}
+	]
+}

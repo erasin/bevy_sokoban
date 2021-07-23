@@ -1,4 +1,4 @@
-use crate::{加载模块::FontAssets, 数据模块::*, 状态模块::全局状态};
+use crate::{加载模块::字体素材, 数据模块::*, 状态模块::全局状态};
 use bevy::prelude::*;
 
 #[derive(Default)]
@@ -20,7 +20,7 @@ fn 初始化处理(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     data: Res<全局数据>,
-    font: Res<FontAssets>,
+    font: Res<字体素材>,
     button_materials: Res<ButtonMaterials>,
 ) {
     commands.spawn().insert_bundle(UiCameraBundle::default());

@@ -17,4 +17,5 @@ bevy = { version = "0.5", features = ["default", "wav"] }
 rand = "0.8"
 dotenv = "0.15"
 anyhow = "1"
-bevy_kira_audio = { version = "0.4.0" }
+bevy_kira_audio = { version = "0.5.1" }
+bevy_asset_loader = "0.4.0"

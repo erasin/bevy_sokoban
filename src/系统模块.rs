@@ -1,5 +1,5 @@
 use crate::事件模块::*;
-use crate::加载模块::AudioAssets;
+use crate::加载模块::音频素材;
 use crate::地图模块::*;
 use crate::数据模块::*;
 use crate::{状态模块::全局状态, 组件模块::*};
@@ -77,15 +77,15 @@ pub fn 坐标转化处理(map: Res<地图数据>, mut query: Query<(&mut 坐标,
 
 use crate::行为模块::动作集;
 
-///  移动
+///  移动  
 pub fn 玩家移动处理(
     // time: Res<Time>,
-    actions: Res<动作集>,
-    radio: Res<Audio>,
-    audio_assets: Res<AudioAssets>,
+    动作: Res<动作集>,
+    音频: Res<Audio>,
+    音频资源: Res<音频素材>,
     // input: Res<Input<KeyCode>>,
-    map: Res<地图数据>,
-    mut data: ResMut<全局数据>,
+    地图: Res<地图数据>,
+    mut 数据: ResMut<全局数据>,
     // mut player_query: Query<(Entity, &mut Position, &mut Player)>,
     // immovable_query: Query<(Entity, &Position, &Immovable)>,
     // mut moveable_query: Query<(Entity, &mut Position, &Movable), Without<Player>>,
@@ -99,11 +99,11 @@ pub fn 玩家移动处理(
 
     let mut vol = 坐标 { x: 0, y: 0 };
 
-    if actions.用户移动向量.is_none() {
+    if 动作.用户移动向量.is_none() {
         return;
     }
-    vol.x = actions.用户移动向量.unwrap().x as i32;
-    vol.y = actions.用户移动向量.unwrap().y as i32;
+    vol.x = 动作.用户移动向量.unwrap().x as i32;
+    vol.y = 动作.用户移动向量.unwrap().y as i32;
 
     if vol.x == vol.y && vol.y == 0 {
         return;
@@ -113,31 +113,31 @@ pub fn 玩家移动处理(
     let mut to_move = HashSet::new();
 
     // 所有可移动
-    let mov: HashMap<(i32, i32), u32> = query
+    let 所有可移动对象: HashMap<(i32, i32), u32> = query
         .q2_mut()
         .iter_mut()
         .map(|(e, p, _)| ((p.x, p.y), e.id()))
         .collect::<HashMap<_, _>>();
 
     // 所有不可移动
-    let immvo: HashMap<(i32, i32), u32> = query
+    let 所有不可移动对象: HashMap<(i32, i32), u32> = query
         .q1()
         .iter()
         .map(|(e, p, _)| ((p.x, p.y), e.id()))
         .collect::<HashMap<_, _>>();
 
-    for (entity, mut pos, mut _per) in query.q0_mut().iter_mut() {
-        to_move.insert(entity.id());
+    for (玩家实体, mut 玩家坐标, mut _per) in query.q0_mut().iter_mut() {
+        to_move.insert(玩家实体.id());
 
         // 移动方向链存储器
         let (start, end, is_x) = match &vol {
             &坐标 { x: 0, y } => {
-                let len = if y > 0 { map.height as i32 } else { 0 };
-                ((pos.y + y) as i32, len, false)
+                let len = if y > 0 { 地图.height as i32 } else { 0 };
+                ((玩家坐标.y + y) as i32, len, false)
             }
             &坐标 { x, y: 0 } => {
-                let len = if x > 0 { map.width as i32 } else { 0 };
-                ((pos.x + x) as i32, len, true)
+                let len = if x > 0 { 地图.width as i32 } else { 0 };
+                ((玩家坐标.x + x) as i32, len, true)
             }
             _ => (0, 0, false),
         };
@@ -150,16 +150,20 @@ pub fn 玩家移动处理(
         };
 
         for x_y in range {
-            let p2 = if is_x { (x_y, pos.y) } else { (pos.x, x_y) };
+            let p2 = if is_x {
+                (x_y, 玩家坐标.y)
+            } else {
+                (玩家坐标.x, x_y)
+            };
 
             // println!("5 -> {:?} ", p2);
 
-            match mov.get(&p2) {
+            match 所有可移动对象.get(&p2) {
                 Some(id) => to_move.insert(*id),
                 None => {
-                    radio.play(audio_assets.audio_wall.as_weak());
+                    音频.play(音频资源.audio_wall.as_weak());
                     // 查询不可移动，清空队列
-                    match immvo.get(&p2) {
+                    match 所有不可移动对象.get(&p2) {
                         Some(_) => to_move.clear(),
                         None => break,
                     }
@@ -169,9 +173,9 @@ pub fn 玩家移动处理(
         }
 
         // 移动用户
-        if to_move.remove(&entity.id()) {
-            *pos = *pos + vol;
-            data.计步数 += 1;
+        if to_move.remove(&玩家实体.id()) {
+            *玩家坐标 = *玩家坐标 + vol;
+            数据.计步数 += 1;
             // println!("{} {}", per.name, per.step);
         }
     }
