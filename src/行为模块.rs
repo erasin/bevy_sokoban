@@ -1,4 +1,4 @@
-use crate::全局状态;
+use crate::{事件模块::移动到目标事件, 全局状态};
 
 use bevy::{
     core::FixedTimestep,
@@ -11,25 +11,24 @@ pub struct 控制插件;
 
 impl Plugin for 控制插件 {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<手柄连接器>()
-            .init_resource::<动作集>()
+        app.add_event::<移动事件>()
+            .init_resource::<手柄连接器>()
             .add_system_to_stage(CoreStage::PreUpdate, 手柄连接处理.system())
             .add_system_set(
                 SystemSet::on_update(全局状态::游戏中)
-                    .with_run_criteria(FixedTimestep::step(0.55))
+                    // .with_run_criteria(FixedTimestep::step(0.55))
                     .with_system(键盘处理.system())
                     .label("action"),
             );
     }
 }
 
+// 取消使用resouce, 使用event 处理
 #[derive(Default)]
-pub struct 动作集 {
-    pub 用户移动向量: Option<Vec2>,
-}
+pub struct 移动事件(pub i32, pub i32);
 
 fn 键盘处理(
-    mut 动作: ResMut<动作集>,
+    mut 移动事件发送器: EventWriter<移动事件>,
     按键键值: Res<Input<KeyCode>>,
     mut 当前状态: ResMut<State<全局状态>>,
 ) {
@@ -42,49 +41,44 @@ fn 键盘处理(
         || 按键键值.just_released(KeyCode::D)
         || 按键键值.pressed(KeyCode::D)
     {
-        let mut 移动值 = Vec2::ZERO;
+        let mut x = 0;
+        let mut y = 0;
 
         if 按键键值.just_released(KeyCode::W) || 按键键值.just_released(KeyCode::S) {
             if 按键键值.pressed(KeyCode::W) {
-                移动值.y = 1.;
+                y = 1;
             } else if 按键键值.pressed(KeyCode::S) {
-                移动值.y = -1.;
+                y = -1;
             } else {
-                移动值.y = 0.;
+                y = 0;
             }
         } else if 按键键值.just_pressed(KeyCode::W) {
-            移动值.y = 1.;
+            y = 1;
         } else if 按键键值.just_pressed(KeyCode::S) {
-            移动值.y = -1.;
+            y = -1;
         } else {
             // player_movement.y = actions.player_movement.unwrap_or(Vec2::ZERO).y;
         }
-        info!("W ->>");
 
         if 按键键值.just_released(KeyCode::D) || 按键键值.just_released(KeyCode::A) {
             if 按键键值.pressed(KeyCode::D) {
-                移动值.x = 1.;
+                x = 1;
             } else if 按键键值.pressed(KeyCode::A) {
-                移动值.x = -1.;
+                x = -1;
             } else {
-                移动值.x = 0.;
+                x = 0;
             }
         } else if 按键键值.just_pressed(KeyCode::D) {
-            移动值.x = 1.;
+            x = 1;
         } else if 按键键值.just_pressed(KeyCode::A) {
-            移动值.x = -1.;
+            x = -1;
         } else {
             // player_movement.x = actions.player_movement.unwrap_or(Vec2::ZERO).x;
         }
 
-        info!("{}", 移动值);
-
-        if 移动值 != Vec2::ZERO {
-            移动值 = 移动值.normalize();
-            动作.用户移动向量 = Some(移动值);
+        if x != y {
+            移动事件发送器.send(移动事件(x, y))
         }
-    } else {
-        动作.用户移动向量 = None
     }
 
     if 按键键值.just_released(KeyCode::Q) {
@@ -117,30 +111,28 @@ fn 手柄连接处理(
 }
 
 fn 手柄按键处理(
-    mut actions: ResMut<动作集>,
+    mut 移动事件发送器: EventWriter<移动事件>,
     lobby: Res<手柄连接器>,
     button_inputs: Res<Input<GamepadButton>>,
     button_axes: Res<Axis<GamepadButton>>,
     axes: Res<Axis<GamepadAxis>>,
 ) {
-    let mut 移动值 = Vec2::ZERO;
+    let mut x = 0;
+    let mut y = 0;
 
     for gamepad in lobby.手柄.iter().cloned() {
         if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::South)) {
-            移动值.y = -1.;
+            y = -1;
         } else if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::North)) {
-            移动值.y = 1.;
+            y = 1;
         } else if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::East)) {
-            移动值.x = 1.;
+            x = 1;
         } else if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::West)) {
-            移动值.x = -1.;
-        } else {
-            移动值.y = actions.用户移动向量.unwrap_or(Vec2::ZERO).y;
+            x = -1;
         }
 
-        if 移动值 != Vec2::ZERO {
-            移动值 = 移动值.normalize();
-            actions.用户移动向量 = Some(移动值);
+        if x != y {
+            移动事件发送器.send(移动事件(x, y))
         }
 
         let right_trigger = button_axes

@@ -1,6 +1,5 @@
-use crate::全局状态;
 use crate::加载模块::音频素材;
-use crate::行为模块::动作集;
+use crate::{全局状态, 行为模块::移动事件};
 
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
@@ -35,10 +34,16 @@ fn stop_audio(audio: Res<Audio>, channels: Res<AudioChannels>) {
     audio.stop_channel(&channels.flying);
 }
 
-fn control_flying_sound(actions: Res<动作集>, audio: Res<Audio>, channels: Res<AudioChannels>) {
-    if actions.用户移动向量.is_some() {
-        audio.resume_channel(&channels.flying);
-    } else {
-        audio.pause_channel(&channels.flying)
+fn control_flying_sound(
+    mut 移动事件接收器: EventReader<移动事件>,
+    audio: Res<Audio>,
+    channels: Res<AudioChannels>,
+) {
+    for ev in 移动事件接收器.iter() {
+        if ev.0 != ev.1 {
+            audio.resume_channel(&channels.flying);
+        } else {
+            audio.pause_channel(&channels.flying)
+        }
     }
 }

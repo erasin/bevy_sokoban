@@ -2,6 +2,7 @@ use crate::事件模块::*;
 use crate::加载模块::音频素材;
 use crate::地图模块::*;
 use crate::数据模块::*;
+use crate::行为模块::移动事件;
 use crate::{状态模块::全局状态, 组件模块::*};
 use crate::{SCALE, TILED_WIDTH};
 
@@ -14,7 +15,7 @@ pub struct 行为组件;
 
 impl Plugin for 行为组件 {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_event::<移动事件>().add_system_set(
+        app.add_event::<移动到目标事件>().add_system_set(
             SystemSet::on_update(全局状态::游戏中)
                 .after("loadmap")
                 .with_system(动画效果处理.system())
@@ -75,35 +76,25 @@ pub fn 坐标转化处理(map: Res<地图数据>, mut query: Query<(&mut 坐标,
     }
 }
 
-use crate::行为模块::动作集;
-
 ///  移动  
 pub fn 玩家移动处理(
-    // time: Res<Time>,
-    动作: Res<动作集>,
+    mut 移动事件读取器: EventReader<移动事件>,
     音频: Res<Audio>,
     音频资源: Res<音频素材>,
-    // input: Res<Input<KeyCode>>,
     地图: Res<地图数据>,
     mut 数据: ResMut<全局数据>,
-    // mut player_query: Query<(Entity, &mut Position, &mut Player)>,
-    // immovable_query: Query<(Entity, &Position, &Immovable)>,
-    // mut moveable_query: Query<(Entity, &mut Position, &Movable), Without<Player>>,
     mut query: QuerySet<(
         Query<(Entity, &mut 坐标, &mut 玩家)>,
         Query<(Entity, &坐标, &不可移动的)>,
         Query<(Entity, &mut 坐标, &可移动的), Without<玩家>>,
     )>,
 ) {
-    // let _delta_seconds = f32::min(0.2, time.delta_seconds);
-
     let mut vol = 坐标 { x: 0, y: 0 };
 
-    if 动作.用户移动向量.is_none() {
-        return;
+    for ev in 移动事件读取器.iter() {
+        vol.x = ev.0;
+        vol.y = ev.1;
     }
-    vol.x = 动作.用户移动向量.unwrap().x as i32;
-    vol.y = 动作.用户移动向量.unwrap().y as i32;
 
     if vol.x == vol.y && vol.y == 0 {
         return;
@@ -156,8 +147,6 @@ pub fn 玩家移动处理(
                 (玩家坐标.x, x_y)
             };
 
-            // println!("5 -> {:?} ", p2);
-
             match 所有可移动对象.get(&p2) {
                 Some(id) => to_move.insert(*id),
                 None => {
@@ -192,7 +181,7 @@ pub fn 玩家移动处理(
 pub fn 箱子移动到目标处理(
     mut 指令: Commands,
     mut 数据: ResMut<全局数据>,
-    mut 移动事件发送器: EventWriter<移动事件>,
+    mut 移动事件发送器: EventWriter<移动到目标事件>,
     mut 箱子实体集合: Query<(
         Entity,
         &坐标,
@@ -213,7 +202,7 @@ pub fn 箱子移动到目标处理(
                     *texture = b.sprite_ok.0.as_weak();
                     pse.到达 = true;
                     数据.踩点 += 1;
-                    移动事件发送器.send(移动事件::new(pb.x, pb.y));
+                    移动事件发送器.send(移动到目标事件::new(pb.x, pb.y));
                 }
             }
         }
