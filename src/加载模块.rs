@@ -35,15 +35,15 @@ pub struct LoadingState {
     音频: Vec<HandleUntyped>,
 }
 
-pub struct FontAssets {
+pub struct 字体素材 {
     pub font_ui: Handle<Font>,
 }
 
-pub struct AudioAssets {
+pub struct 音频素材 {
     pub audio_wall: Handle<AudioSource>,
 }
 
-pub struct TextureAssets {
+pub struct 纹理素材 {
     pub 纹理表: Handle<TextureAtlas>,
     pub 用户: Handle<TextureAtlas>,
     pub 蓝箱子: Handle<TextureAtlas>,
@@ -91,11 +91,11 @@ fn 检查变动(
         return;
     }
 
-    commands.insert_resource(FontAssets {
+    commands.insert_resource(字体素材 {
         font_ui: asset_server.get_handle(PATHS.font_ui),
     });
 
-    commands.insert_resource(AudioAssets {
+    commands.insert_resource(音频素材 {
         audio_wall: asset_server.get_handle(PATHS.audio_wall),
     });
 
@@ -115,7 +115,7 @@ fn 检查变动(
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 2, 1);
     let texture_atlas_box_blue = texture_atlases.add(texture_atlas);
 
-    commands.insert_resource(TextureAssets {
+    commands.insert_resource(纹理素材 {
         纹理表: texture_atlas_sheet,
         用户: texture_atlas_player,
         蓝箱子: texture_atlas_box_blue,
