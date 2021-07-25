@@ -18,6 +18,7 @@ impl Plugin for 控制插件 {
                 SystemSet::on_update(全局状态::游戏中)
                     // .with_run_criteria(FixedTimestep::step(0.55))
                     .with_system(键盘处理.system())
+                    .with_system(手柄按键处理.system())
                     .label("action"),
             );
     }
