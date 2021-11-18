@@ -2,7 +2,7 @@
 name = "bevy-sokoban"
 version = "0.1.0"
 authors = ["erasin <erasinoo@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "推箱子"
@@ -13,9 +13,13 @@ name = "sokoban"
 path = "src/lib.rs"
 
 [dependencies]
-bevy = { version = "0.5", features = ["default", "wav"] }
+# bevy = { version = "0.5", features = ["default", "wav"] }
+bevy = { git = "https://github.com/bevyengine/bevy", features = [
+	"default",
+	"wav",
+] }
 rand = "0.8"
 dotenv = "0.15"
 anyhow = "1"
-bevy_kira_audio = { version = "0.5.1" }
-bevy_asset_loader = "0.4.0"
+bevy_kira_audio = { version = "0.6.0" }
+bevy_asset_loader = "0.6.0"

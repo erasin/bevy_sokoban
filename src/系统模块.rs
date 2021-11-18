@@ -2,9 +2,11 @@ use crate::事件模块::*;
 use crate::加载模块::音频素材;
 use crate::地图模块::*;
 use crate::数据模块::*;
+use crate::瓦片尺寸;
+use crate::缩放比例;
 use crate::行为模块::移动事件;
-use crate::{状态模块::全局状态, 组件模块::*};
-use crate::{SCALE, TILED_WIDTH};
+use crate::组件模块::{不可移动的, 可移动的, 坐标, 玩家, 目标点, 箱子};
+use crate::状态模块::全局状态;
 
 use bevy::{math::vec2, prelude::*};
 use std::collections::HashMap;
@@ -29,17 +31,6 @@ impl Plugin for 行为组件 {
     }
 }
 
-/// 镜头处理
-// pub fn camera_system(map: Res<Map>, mut query: Query<(&Camera, &mut Transform)>) {
-//     let height = map.height as f32 * TILED_WIDTH * SCALE;
-//     let width = map.width as f32 * TILED_WIDTH * SCALE;
-
-//     for (_, mut trans) in &mut query.iter() {
-//         // 相机 z 高度位置需要高于要显示的对象
-//         trans.set_translation(Vec3::new(height / 2.0, width / 2.0, 2.0));
-//     }
-// }
-
 /// 动画效果
 pub fn 动画效果处理(
     texture_atlases: Res<Assets<TextureAtlas>>,
@@ -55,24 +46,24 @@ pub fn 动画效果处理(
 
 /// 坐标转化
 pub fn 坐标转化处理(map: Res<地图数据>, mut query: Query<(&mut 坐标, &mut Transform)>) {
-    let height = map.height as f32 * TILED_WIDTH * SCALE;
-    let width = map.width as f32 * TILED_WIDTH * SCALE;
+    let height = map.height as f32 * 瓦片尺寸 * 缩放比例;
+    let width = map.width as f32 * 瓦片尺寸 * 缩放比例;
 
     let x = width / 2.0;
     let y = height / 2.0;
 
-    for (pos, mut trans) in query.iter_mut() {
-        let t = trans.translation.clone();
+    for (当前坐标, mut 当前转换) in query.iter_mut() {
+        let t = 当前转换.translation.clone();
         let start = vec2(t.x, t.y);
         let end = start.lerp(
             vec2(
-                pos.x as f32 * SCALE * TILED_WIDTH - x,
-                pos.y as f32 * SCALE * TILED_WIDTH - y,
+                当前坐标.x as f32 * 缩放比例 * 瓦片尺寸 - x,
+                当前坐标.y as f32 * 缩放比例 * 瓦片尺寸 - y,
             ),
             0.35,
         );
-        trans.translation.x = end.x;
-        trans.translation.y = end.y;
+        当前转换.translation.x = end.x;
+        当前转换.translation.y = end.y;
     }
 }
 

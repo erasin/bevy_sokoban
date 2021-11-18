@@ -38,9 +38,9 @@ use 行为模块::控制插件;
 use 镜头模块::镜头特效插件;
 
 /// 瓦片宽度大小设定
-const TILED_WIDTH: f32 = 32.0;
+const 瓦片尺寸: f32 = 32.0;
 /// 瓦片放大比例
-const SCALE: f32 = 2.0;
+const 缩放比例: f32 = 2.0;
 
 pub struct 组件集合;
 

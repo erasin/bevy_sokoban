@@ -1,4 +1,4 @@
-use crate::SCALE;
+use crate::缩放比例;
 use crate::{加载模块::纹理素材, 状态模块::全局状态, 组件模块::*};
 
 use bevy::prelude::*;
@@ -69,7 +69,11 @@ impl 地图数据 {
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: 素材.纹理表.as_weak(),
-                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
+                                transform: Transform::from_scale(Vec3::new(
+                                    缩放比例,
+                                    缩放比例,
+                                    1.0,
+                                )),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -85,7 +89,7 @@ impl 地图数据 {
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
                                     rotation: Quat::IDENTITY,
-                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                    scale: Vec3::new(缩放比例, 缩放比例, 1.0),
                                 },
                                 sprite: TextureAtlasSprite::new(3),
                                 ..Default::default()
@@ -100,7 +104,11 @@ impl 地图数据 {
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: 素材.纹理表.as_weak(),
-                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
+                                transform: Transform::from_scale(Vec3::new(
+                                    缩放比例,
+                                    缩放比例,
+                                    1.0,
+                                )),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -114,7 +122,7 @@ impl 地图数据 {
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
                                     rotation: Quat::IDENTITY,
-                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                    scale: Vec3::new(缩放比例, 缩放比例, 1.0),
                                 },
                                 ..Default::default()
                             })
@@ -128,7 +136,11 @@ impl 地图数据 {
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: 素材.纹理表.as_weak(),
-                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
+                                transform: Transform::from_scale(Vec3::new(
+                                    缩放比例,
+                                    缩放比例,
+                                    1.0,
+                                )),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -143,7 +155,7 @@ impl 地图数据 {
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 2.0),
                                     rotation: Quat::IDENTITY,
-                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                    scale: Vec3::new(缩放比例, 缩放比例, 1.0),
                                 },
                                 ..Default::default()
                             })
@@ -160,7 +172,11 @@ impl 地图数据 {
                             .spawn()
                             .insert_bundle(SpriteSheetBundle {
                                 texture_atlas: 素材.纹理表.as_weak(),
-                                transform: Transform::from_scale(Vec3::new(SCALE, SCALE, 1.0)),
+                                transform: Transform::from_scale(Vec3::new(
+                                    缩放比例,
+                                    缩放比例,
+                                    1.0,
+                                )),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
                             })
@@ -176,7 +192,7 @@ impl 地图数据 {
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 0.1),
                                     rotation: Quat::IDENTITY,
-                                    scale: Vec3::new(SCALE, SCALE, 1.0),
+                                    scale: Vec3::new(缩放比例, 缩放比例, 1.0),
                                 },
                                 ..Default::default()
                             })

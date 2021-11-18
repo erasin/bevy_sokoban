@@ -1,7 +1,6 @@
-use crate::{事件模块::移动到目标事件, 全局状态};
+use crate::全局状态;
 
 use bevy::{
-    core::FixedTimestep,
     input::gamepad::{Gamepad, GamepadButton, GamepadEvent, GamepadEventType},
     prelude::*,
     utils::HashSet,
@@ -19,7 +18,7 @@ impl Plugin for 控制插件 {
                     // .with_run_criteria(FixedTimestep::step(0.55))
                     .with_system(键盘处理.system())
                     .with_system(手柄按键处理.system())
-                    .label("action"),
+                    .label("手柄动作"),
             );
     }
 }
