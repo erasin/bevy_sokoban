@@ -6,11 +6,11 @@ use bevy::{
 };
 
 #[derive(Default)]
-pub struct DebugPlugin;
+pub struct 调试组件;
 
 pub struct FpsText;
 
-impl Plugin for DebugPlugin {
+impl Plugin for 调试组件 {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default())
             .add_startup_system(setup_system.system())

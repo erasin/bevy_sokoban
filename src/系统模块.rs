@@ -2,11 +2,10 @@ use crate::事件模块::*;
 use crate::加载模块::音频素材;
 use crate::地图模块::*;
 use crate::数据模块::*;
-use crate::瓦片尺寸;
-use crate::缩放比例;
-use crate::行为模块::移动事件;
-use crate::组件模块::{不可移动的, 可移动的, 坐标, 玩家, 目标点, 箱子};
 use crate::状态模块::全局状态;
+use crate::状态模块::标签;
+use crate::组件模块::{不可移动的, 可移动的, 坐标, 玩家, 目标点, 箱子};
+use crate::行为模块::移动事件;
 
 use bevy::{math::vec2, prelude::*};
 use std::collections::HashMap;
@@ -19,35 +18,40 @@ impl Plugin for 行为组件 {
     fn build(&self, app: &mut AppBuilder) {
         app.add_event::<移动到目标事件>().add_system_set(
             SystemSet::on_update(全局状态::游戏中)
-                .after("loadmap")
+                .after(标签::地图加载)
                 .with_system(动画效果处理.system())
                 .with_system(箱子移动到目标处理.system())
-                .after("action")
+                .after(标签::键盘处理)
                 .with_system(坐标转化处理.system())
                 .with_system(玩家移动处理.system())
                 .with_system(积分器处理.system())
-                .with_system(事件监听处理.system()),
+                .with_system(移动到目标事件监听处理.system()),
         );
     }
 }
 
 /// 动画效果
 pub fn 动画效果处理(
-    texture_atlases: Res<Assets<TextureAtlas>>,
+    系统时间: Res<Time>,
+    瓦片资源: Res<Assets<TextureAtlas>>,
     mut query: Query<(&mut Timer, &mut TextureAtlasSprite, &Handle<TextureAtlas>), With<玩家>>,
 ) {
-    for (timer, mut sprite, texture_atlas_handle) in query.iter_mut() {
-        if timer.finished() {
-            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
+    for (mut 计时器, mut sprite, texture_atlas_handle) in query.iter_mut() {
+        if 计时器.tick(系统时间.delta()).finished() {
+            let texture_atlas = 瓦片资源.get(texture_atlas_handle).unwrap();
             sprite.index = ((sprite.index as usize + 1) % texture_atlas.textures.len()) as u32;
         }
     }
 }
 
 /// 坐标转化
-pub fn 坐标转化处理(map: Res<地图数据>, mut query: Query<(&mut 坐标, &mut Transform)>) {
-    let height = map.height as f32 * 瓦片尺寸 * 缩放比例;
-    let width = map.width as f32 * 瓦片尺寸 * 缩放比例;
+pub fn 坐标转化处理(
+    map: Res<地图数据>,
+    mut query: Query<(&mut 坐标, &mut Transform)>,
+    数据: Res<全局数据>,
+) {
+    let height = map.height as f32 * 数据.瓦片尺寸 * 数据.缩放比例;
+    let width = map.width as f32 * 数据.瓦片尺寸 * 数据.缩放比例;
 
     let x = width / 2.0;
     let y = height / 2.0;
@@ -57,13 +61,15 @@ pub fn 坐标转化处理(map: Res<地图数据>, mut query: Query<(&mut 坐标,
         let start = vec2(t.x, t.y);
         let end = start.lerp(
             vec2(
-                当前坐标.x as f32 * 缩放比例 * 瓦片尺寸 - x,
-                当前坐标.y as f32 * 缩放比例 * 瓦片尺寸 - y,
+                当前坐标.x as f32 * 数据.缩放比例 * 数据.瓦片尺寸 - x,
+                当前坐标.y as f32 * 数据.缩放比例 * 数据.瓦片尺寸 - y,
             ),
             0.35,
         );
         当前转换.translation.x = end.x;
         当前转换.translation.y = end.y;
+        当前转换.scale.x = 数据.缩放比例;
+        当前转换.scale.y = 数据.缩放比例;
     }
 }
 

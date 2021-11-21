@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 use std::time::Duration;
 
-pub struct CameraTarget;
+pub struct 镜头;
 
 #[derive(PartialEq)]
 pub enum 镜头状态 {
@@ -18,13 +18,13 @@ pub struct 镜头数据 {
 }
 
 pub struct 镜头特效插件 {
-    shake_duration: Duration,
+    抖动持续时长: Duration,
 }
 
 impl 镜头特效插件 {
     pub fn new(seconds: f32) -> Self {
         镜头特效插件 {
-            shake_duration: Duration::from_secs_f32(seconds),
+            抖动持续时长: Duration::from_secs_f32(seconds),
         }
     }
 }
@@ -33,7 +33,7 @@ impl Plugin for 镜头特效插件 {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(镜头数据 {
             状态: 镜头状态::正常,
-            计时器: Timer::new(self.shake_duration, true),
+            计时器: Timer::new(self.抖动持续时长, true),
         })
         .add_startup_system(初始化处理.system())
         .add_system_set(
@@ -46,16 +46,15 @@ impl Plugin for 镜头特效插件 {
 
 fn 初始化处理(mut 指令: Commands) {
     指令
-        .spawn()
-        .insert_bundle(OrthographicCameraBundle::new_2d())
-        .insert(CameraTarget);
+        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .insert(镜头);
 }
 
 // 抖动原型
 fn 镜头抖动处理(
     系统时间: Res<Time>,
     mut 当前镜头: ResMut<镜头数据>,
-    mut query: Query<(&CameraTarget, &mut Transform)>,
+    mut query: Query<(&镜头, &mut Transform)>,
 ) {
     if 当前镜头.状态 == 镜头状态::抖动 {
         let mut rng = thread_rng();
@@ -69,8 +68,8 @@ fn 镜头抖动处理(
             trans.translation.y += y_target;
         }
     }
-    当前镜头.计时器.tick(系统时间.delta());
-    if 当前镜头.计时器.finished() {
+
+    if 当前镜头.计时器.tick(系统时间.delta()).finished() {
         当前镜头.状态 = 镜头状态::正常;
 
         for (_, mut trans) in query.iter_mut() {
@@ -87,7 +86,7 @@ fn 镜头跟随处理(
     当前镜头: Res<镜头数据>,
     mut query: QuerySet<(
         Query<&Transform, With<玩家>>,
-        Query<&mut Transform, With<CameraTarget>>,
+        Query<&mut Transform, With<镜头>>,
     )>,
 ) {
     if 当前镜头.状态 == 镜头状态::跟随 {

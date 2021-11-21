@@ -1,6 +1,7 @@
-use crate::全局状态;
+use crate::{全局状态, 状态模块::标签};
 
 use bevy::{
+    app::AppExit,
     input::gamepad::{Gamepad, GamepadButton, GamepadEvent, GamepadEventType},
     prelude::*,
     utils::HashSet,
@@ -18,8 +19,11 @@ impl Plugin for 控制插件 {
                     // .with_run_criteria(FixedTimestep::step(0.55))
                     .with_system(键盘处理.system())
                     .with_system(手柄按键处理.system())
-                    .label("手柄动作"),
+                    .label(标签::键盘处理),
             );
+
+        app.add_system(全局键盘处理.system())
+            .add_system(隐藏鼠标处理.system());
     }
 }
 
@@ -28,9 +32,7 @@ impl Plugin for 控制插件 {
 pub struct 移动事件(pub i32, pub i32);
 
 fn 键盘处理(
-    mut 移动事件发送器: EventWriter<移动事件>,
-    按键键值: Res<Input<KeyCode>>,
-    mut 当前状态: ResMut<State<全局状态>>,
+    mut 移动事件发送器: EventWriter<移动事件>, 按键键值: ResMut<Input<KeyCode>>
 ) {
     if 按键键值.just_released(KeyCode::W)
         || 按键键值.pressed(KeyCode::W)
@@ -80,10 +82,6 @@ fn 键盘处理(
             移动事件发送器.send(移动事件(x, y))
         }
     }
-
-    if 按键键值.just_released(KeyCode::Q) {
-        当前状态.set(全局状态::菜单).unwrap();
-    }
 }
 
 #[derive(Default)]
@@ -113,21 +111,21 @@ fn 手柄连接处理(
 fn 手柄按键处理(
     mut 移动事件发送器: EventWriter<移动事件>,
     lobby: Res<手柄连接器>,
-    button_inputs: Res<Input<GamepadButton>>,
-    button_axes: Res<Axis<GamepadButton>>,
-    axes: Res<Axis<GamepadAxis>>,
+    按钮: Res<Input<GamepadButton>>,
+    按钮力度: Res<Axis<GamepadButton>>,
+    摇杆: Res<Axis<GamepadAxis>>,
 ) {
     let mut x = 0;
     let mut y = 0;
 
     for gamepad in lobby.手柄.iter().cloned() {
-        if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::South)) {
+        if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::South)) {
             y = -1;
-        } else if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::North)) {
+        } else if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::North)) {
             y = 1;
-        } else if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::East)) {
+        } else if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::East)) {
             x = 1;
-        } else if button_inputs.just_released(GamepadButton(gamepad, GamepadButtonType::West)) {
+        } else if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::West)) {
             x = -1;
         }
 
@@ -135,18 +133,57 @@ fn 手柄按键处理(
             移动事件发送器.send(移动事件(x, y))
         }
 
-        let right_trigger = button_axes
+        let right_trigger = 按钮力度
             .get(GamepadButton(gamepad, GamepadButtonType::RightTrigger2))
             .unwrap();
         if right_trigger.abs() > 0.01 {
             info!("{:?} RightTrigger2 value is {}", gamepad, right_trigger);
         }
 
-        let left_stick_x = axes
+        let left_stick_x = 摇杆
             .get(GamepadAxis(gamepad, GamepadAxisType::LeftStickX))
             .unwrap();
         if left_stick_x.abs() > 0.01 {
             info!("{:?} LeftStickX value is {}", gamepad, left_stick_x);
         }
+    }
+}
+
+fn 全局键盘处理(
+    mut 按键键值: ResMut<Input<KeyCode>>,
+    mut 当前状态: ResMut<State<全局状态>>,
+    mut 系统退出发送器: EventWriter<AppExit>,
+) {
+    if 按键键值.just_released(KeyCode::Escape) {
+        match *当前状态.current() {
+            全局状态::加载中 => 系统退出发送器.send(AppExit),
+            全局状态::主菜单 => 系统退出发送器.send(AppExit),
+            _ => {
+                当前状态.set(全局状态::主菜单).unwrap();
+                按键键值.reset(KeyCode::Escape);
+            }
+        }
+    };
+
+    if 按键键值.just_released(KeyCode::Q) {
+        系统退出发送器.send(AppExit)
+    }
+}
+
+fn 隐藏鼠标处理(
+    mut 窗口: ResMut<Windows>,
+    鼠标按键: Res<Input<MouseButton>>,
+    按键: Res<Input<KeyCode>>,
+) {
+    let 主窗口 = 窗口.get_primary_mut().unwrap();
+
+    if 鼠标按键.just_pressed(MouseButton::Left) {
+        主窗口.set_cursor_lock_mode(true);
+        主窗口.set_cursor_visibility(false);
+    }
+
+    if 按键.just_pressed(KeyCode::Escape) {
+        主窗口.set_cursor_lock_mode(false);
+        主窗口.set_cursor_visibility(true);
     }
 }

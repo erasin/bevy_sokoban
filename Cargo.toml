@@ -13,11 +13,7 @@ name = "sokoban"
 path = "src/lib.rs"
 
 [dependencies]
-# bevy = { version = "0.5", features = ["default", "wav"] }
-bevy = { git = "https://github.com/bevyengine/bevy", features = [
-	"default",
-	"wav",
-] }
+bevy = { version = "0.5", features = ["default", "wav"] }
 rand = "0.8"
 dotenv = "0.15"
 anyhow = "1"

@@ -24,26 +24,28 @@ struct AudioChannels {
     flying: AudioChannel,
 }
 
-fn start_audio(audio_assets: Res<音频素材>, audio: Res<Audio>, channels: Res<AudioChannels>) {
-    audio.set_volume_in_channel(0.3, &channels.flying);
-    audio.play_looped_in_channel(audio_assets.audio_wall.clone(), &channels.flying);
-    audio.pause_channel(&channels.flying);
+fn start_audio(
+    音频资源: Res<音频素材>, 音频: Res<Audio>, 音频信道: Res<AudioChannels>
+) {
+    音频.set_volume_in_channel(0.3, &音频信道.flying);
+    音频.play_looped_in_channel(音频资源.audio_wall.clone(), &音频信道.flying);
+    音频.pause_channel(&音频信道.flying);
 }
 
-fn stop_audio(audio: Res<Audio>, channels: Res<AudioChannels>) {
-    audio.stop_channel(&channels.flying);
+fn stop_audio(音频: Res<Audio>, 音频信道: Res<AudioChannels>) {
+    音频.stop_channel(&音频信道.flying);
 }
 
 fn control_flying_sound(
     mut 移动事件接收器: EventReader<移动事件>,
-    audio: Res<Audio>,
-    channels: Res<AudioChannels>,
+    音频: Res<Audio>,
+    音频信道: Res<AudioChannels>,
 ) {
     for ev in 移动事件接收器.iter() {
         if ev.0 != ev.1 {
-            audio.resume_channel(&channels.flying);
+            音频.resume_channel(&音频信道.flying);
         } else {
-            audio.pause_channel(&channels.flying)
+            音频.pause_channel(&音频信道.flying)
         }
     }
 }

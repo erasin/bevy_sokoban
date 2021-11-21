@@ -1,16 +1,30 @@
 use crate::全局状态;
 use crate::加载模块::字体素材;
+use crate::地图模块::地图加载事件;
+use crate::界面模块::界面层;
+use crate::组件模块::坐标;
+use bevy::ecs::component::Component;
 use bevy::prelude::*;
 
 /// 菜单组件
-pub struct 菜单组件;
+pub struct 主菜单组件;
 
-impl Plugin for 菜单组件 {
+impl Plugin for 主菜单组件 {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ButtonMaterials>()
-            .add_system_set(SystemSet::on_enter(全局状态::菜单).with_system(初始化处理.system()))
             .add_system_set(
-                SystemSet::on_update(全局状态::菜单).with_system(点击开始按钮处理.system()),
+                SystemSet::on_enter(全局状态::主菜单)
+                    .with_system(清理内容::<坐标>.system())
+                    .with_system(清理内容::<界面层>.system())
+                    .with_system(初始化处理.system()),
+            )
+            .add_system_set(
+                SystemSet::on_update(全局状态::主菜单)
+                    .with_system(点击开始按钮处理.system())
+                    .with_system(键盘处理.system()),
+            )
+            .add_system_set(
+                SystemSet::on_exit(全局状态::主菜单).with_system(清理内容::<菜单层>.system()),
             );
     }
 }
@@ -33,13 +47,22 @@ impl FromWorld for ButtonMaterials {
     }
 }
 
+pub fn 清理内容<T: Component>(mut 指令: Commands, 所有: Query<Entity, With<T>>) {
+    所有.for_each(|e| {
+        指令.entity(e).despawn_recursive();
+    });
+}
+
+pub struct 菜单层;
+
 /// 按钮
 struct 开始按钮;
 
 fn 初始化处理(
+    // 世界: &mut World,
     mut 指令: Commands,
-    font: Res<字体素材>,
-    button_materials: Res<ButtonMaterials>,
+    字体资源: Res<字体素材>,
+    按钮素材: Res<ButtonMaterials>,
 ) {
     指令.spawn_bundle(UiCameraBundle::default());
     指令
@@ -51,17 +74,17 @@ fn 初始化处理(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            material: button_materials.normal.clone(),
+            material: 按钮素材.normal.clone(),
             ..Default::default()
         })
-        .insert(开始按钮)
+        .insert_bundle((菜单层, 开始按钮))
         .with_children(|parent| {
             parent.spawn_bundle(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
                         value: "Play".to_string(),
                         style: TextStyle {
-                            font: font.font_ui.clone(),
+                            font: 字体资源.font_ui.clone(),
                             font_size: 40.0,
                             color: Color::rgb(0.9, 0.9, 0.9),
                         },
@@ -74,29 +97,38 @@ fn 初始化处理(
 }
 
 fn 点击开始按钮处理(
-    mut commands: Commands,
-    button_materials: Res<ButtonMaterials>,
-    mut state: ResMut<State<全局状态>>,
-    mut interaction_query: Query<
-        (Entity, &Interaction, &mut Handle<ColorMaterial>, &Children),
-        Changed<Interaction>,
+    按钮材质: Res<ButtonMaterials>,
+    mut 当前状态: ResMut<State<全局状态>>,
+    mut 交互队列: Query<
+        (&Interaction, &mut Handle<ColorMaterial>),
+        (With<开始按钮>, Changed<Interaction>),
     >,
-    text_query: Query<Entity, With<Text>>,
+    mut 地图加载事件发送器: EventWriter<地图加载事件>,
 ) {
-    for (button, interaction, mut material, children) in interaction_query.iter_mut() {
-        let text = text_query.get(children[0]).unwrap();
-        match *interaction {
+    for (交互类型, mut 材质) in 交互队列.iter_mut() {
+        match *交互类型 {
             Interaction::Clicked => {
-                commands.entity(button).despawn();
-                commands.entity(text).despawn();
-                state.set(全局状态::游戏中).unwrap();
+                地图加载事件发送器.send(地图加载事件(1));
+                当前状态.set(全局状态::游戏中).unwrap();
             }
             Interaction::Hovered => {
-                *material = button_materials.hovered.clone();
+                *材质 = 按钮材质.hovered.clone();
             }
             Interaction::None => {
-                *material = button_materials.normal.clone();
+                *材质 = 按钮材质.normal.clone();
             }
         }
+    }
+}
+
+fn 键盘处理(
+    mut 按键键值: ResMut<Input<KeyCode>>,
+    mut 当前状态: ResMut<State<全局状态>>,
+    mut 地图加载事件发送器: EventWriter<地图加载事件>,
+) {
+    if 按键键值.just_released(KeyCode::Return) {
+        地图加载事件发送器.send(地图加载事件(1));
+        当前状态.set(全局状态::游戏中).unwrap();
+        按键键值.reset(KeyCode::Grave);
     }
 }

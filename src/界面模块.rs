@@ -2,9 +2,9 @@ use crate::{加载模块::字体素材, 数据模块::*, 状态模块::全局状
 use bevy::prelude::*;
 
 #[derive(Default)]
-pub struct UIPlugin;
+pub struct 界面组件;
 
-impl Plugin for UIPlugin {
+impl Plugin for 界面组件 {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ButtonMaterials>()
             .add_system_set(SystemSet::on_enter(全局状态::游戏中).with_system(初始化处理.system()))
@@ -16,6 +16,8 @@ impl Plugin for UIPlugin {
     }
 }
 
+pub struct 界面层;
+
 fn 初始化处理(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -23,11 +25,12 @@ fn 初始化处理(
     font: Res<字体素材>,
     button_materials: Res<ButtonMaterials>,
 ) {
-    commands.spawn().insert_bundle(UiCameraBundle::default());
+    commands
+        .spawn_bundle(UiCameraBundle::default())
+        .insert(界面层);
 
     commands
-        .spawn()
-        .insert_bundle(NodeBundle {
+        .spawn_bundle(NodeBundle {
             style: Style {
                 //  100%
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
@@ -38,6 +41,7 @@ fn 初始化处理(
             material: materials.add(Color::NONE.into()),
             ..Default::default()
         }) // 总节点
+        .insert(界面层)
         .with_children(|parent| {
             // 行1
             parent
@@ -84,11 +88,11 @@ fn 初始化处理(
                                     material: button_materials.normal.as_weak(),
                                     ..Default::default()
                                 })
-                                .insert(UIBtnNext)
+                                .insert(UI按钮下一关)
                                 .with_children(|parent| {
                                     parent.spawn().insert_bundle(TextBundle {
                                         text: Text::with_section(
-                                            "btn".to_string(),
+                                            "下一关".to_string(),
                                             TextStyle {
                                                 font_size: 20.0,
                                                 font: font.font_ui.as_weak(),
@@ -119,7 +123,7 @@ fn 初始化处理(
                                 .spawn()
                                 .insert_bundle(TextBundle {
                                     text: Text::with_section(
-                                        format!("step:{}", data.计步数),
+                                        format!("计步:{}", data.计步数),
                                         TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
@@ -129,7 +133,7 @@ fn 初始化处理(
                                     ),
                                     ..Default::default()
                                 })
-                                .insert(UIStep);
+                                .insert(UI计步器);
                         });
 
                     // 列3
@@ -163,7 +167,7 @@ fn 初始化处理(
                                     ),
                                     ..Default::default()
                                 })
-                                .insert(UISpot);
+                                .insert(UI目标计数);
                         });
                 });
         });
@@ -174,8 +178,8 @@ fn 文本变动(
     // mut step_query: Query<(&mut Text, &UIStep)>,
     // mut spot_query: Query<(&mut Text, &UISpot)>,
     mut query: QuerySet<(
-        Query<&mut Text, With<UIStep>>,
-        Query<&mut Text, With<UISpot>>,
+        Query<&mut Text, With<UI计步器>>,
+        Query<&mut Text, With<UI目标计数>>,
     )>,
 ) {
     for mut t in query.q0_mut().iter_mut() {
@@ -203,9 +207,9 @@ impl FromWorld for ButtonMaterials {
     }
 }
 
-pub struct UIStep;
-pub struct UISpot;
-pub struct UIBtnNext;
+pub struct UI计步器;
+pub struct UI目标计数;
+pub struct UI按钮下一关;
 
 fn 按钮处理(
     button_materials: Res<ButtonMaterials>,
@@ -215,7 +219,7 @@ fn 按钮处理(
             &Interaction,
             &mut Handle<ColorMaterial>,
             &Children,
-            &UIBtnNext,
+            &UI按钮下一关,
         ),
         Changed<Interaction>,
     >,
@@ -228,7 +232,7 @@ fn 按钮处理(
                 text.sections[0].value = "Press".to_string();
                 *material = button_materials.pressed.as_weak();
                 println!("Press ok");
-                // load map
+                // TODO load map
             }
             Interaction::Hovered => {
                 text.sections[0].value = "Hover".to_string();
