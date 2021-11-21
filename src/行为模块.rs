@@ -1,4 +1,4 @@
-use crate::{全局状态, 状态模块::标签};
+use crate::{事件模块::移动事件, 全局状态, 状态模块::标签};
 
 use bevy::{
     app::AppExit,
@@ -11,8 +11,7 @@ pub struct 控制插件;
 
 impl Plugin for 控制插件 {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_event::<移动事件>()
-            .init_resource::<手柄连接器>()
+        app.init_resource::<手柄连接器>()
             .add_system_to_stage(CoreStage::PreUpdate, 手柄连接处理.system())
             .add_system_set(
                 SystemSet::on_update(全局状态::游戏中)
@@ -26,10 +25,6 @@ impl Plugin for 控制插件 {
             .add_system(隐藏鼠标处理.system());
     }
 }
-
-// 取消使用resouce, 使用event 处理
-#[derive(Default)]
-pub struct 移动事件(pub i32, pub i32);
 
 fn 键盘处理(
     mut 移动事件发送器: EventWriter<移动事件>, 按键键值: ResMut<Input<KeyCode>>

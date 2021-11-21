@@ -1,6 +1,6 @@
+use crate::事件模块::地图加载事件;
 use crate::全局状态;
 use crate::加载模块::字体素材;
-use crate::地图模块::地图加载事件;
 use crate::界面模块::界面层;
 use crate::组件模块::坐标;
 use bevy::ecs::component::Component;

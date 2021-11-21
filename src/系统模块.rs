@@ -5,7 +5,6 @@ use crate::数据模块::*;
 use crate::状态模块::全局状态;
 use crate::状态模块::标签;
 use crate::组件模块::{不可移动的, 可移动的, 坐标, 玩家, 目标点, 箱子};
-use crate::行为模块::移动事件;
 
 use bevy::{math::vec2, prelude::*};
 use std::collections::HashMap;
@@ -178,7 +177,7 @@ pub fn 玩家移动处理(
 pub fn 箱子移动到目标处理(
     mut 指令: Commands,
     mut 数据: ResMut<全局数据>,
-    mut 移动事件发送器: EventWriter<移动到目标事件>,
+    mut 移动到目标事件发送器: EventWriter<移动到目标事件>,
     mut 箱子实体集合: Query<(
         Entity,
         &坐标,
@@ -199,7 +198,7 @@ pub fn 箱子移动到目标处理(
                     *texture = b.sprite_ok.0.as_weak();
                     pse.到达 = true;
                     数据.踩点 += 1;
-                    移动事件发送器.send(移动到目标事件::new(pb.x, pb.y));
+                    移动到目标事件发送器.send(移动到目标事件::new(pb.x, pb.y));
                 }
             }
         }

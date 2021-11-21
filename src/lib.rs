@@ -26,6 +26,7 @@ mod 音频模块;
 
 use bevy::prelude::*;
 use debug::调试组件;
+use 事件模块::事件注册;
 use 加载模块::加载素材库插件;
 use 地图模块::地图插件;
 use 数据模块::*;
@@ -44,6 +45,7 @@ impl PluginGroup for 组件集合 {
         group
             .add(数据组件)
             .add(加载素材库插件)
+            .add(事件注册)
             .add(主菜单组件)
             .add(地图插件)
             .add(镜头特效插件::new(0.5))

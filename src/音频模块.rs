@@ -1,5 +1,5 @@
 use crate::加载模块::音频素材;
-use crate::{全局状态, 行为模块::移动事件};
+use crate::{事件模块::移动事件, 全局状态};
 
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};

@@ -1,3 +1,4 @@
+use crate::事件模块::地图加载事件;
 use crate::数据模块::全局数据;
 use crate::状态模块::标签;
 use crate::{加载模块::纹理素材, 状态模块::全局状态, 组件模块::*};
@@ -29,6 +30,7 @@ pub struct 地图数据 {
     pub height: usize,
     pub width: usize,
     元素: Vec<Vec<String>>,
+    pub 目标数量: i32,
 }
 
 impl 地图数据 {
@@ -57,7 +59,9 @@ impl 地图数据 {
     }
 
     /// 渲染处理
-    pub fn 渲染处理(&self, mut 指令: Commands, 素材: Res<纹理素材>, 缩放比例: f32) {
+    pub fn 渲染处理(
+        &mut self, mut 指令: Commands, 素材: Res<纹理素材>, 缩放比例: f32
+    ) {
         for (y, row) in self.元素.iter().rev().enumerate() {
             for (x, column) in row.iter().enumerate() {
                 let 当前坐标 = 坐标 {
@@ -202,6 +206,8 @@ impl 地图数据 {
                             })
                             .insert(当前坐标)
                             .insert(目标点 { 到达: false });
+
+                        self.目标数量 += 1;
                     }
                     "-" => (),
                     c => panic!("unrecognized map item {}", c),
@@ -246,9 +252,6 @@ fn 快速加载处理(
     }
 }
 
-#[derive(Default)]
-pub struct 地图加载事件(pub i32);
-
 fn 地图加载事件监听(
     mut 指令: Commands,
     mut 地图加载事件读取器: EventReader<地图加载事件>,
@@ -271,6 +274,8 @@ fn 地图加载事件监听(
         坐标实体.for_each_mut(|e| {
             指令.entity(e).despawn_recursive();
         });
+        数据.计步数 = 0;
+        数据.踩点 = 0;
         数据.地图 = Some(地图编号);
         *地图资源 = 地图数据::加载(地图文件).unwrap();
         地图资源.渲染处理(指令, 素材, 数据.缩放比例);
