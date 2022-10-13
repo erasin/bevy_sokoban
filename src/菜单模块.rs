@@ -10,42 +10,25 @@ use bevy::prelude::*;
 pub struct 主菜单组件;
 
 impl Plugin for 主菜单组件 {
-    fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<ButtonMaterials>()
-            .add_system_set(
-                SystemSet::on_enter(全局状态::主菜单)
-                    .with_system(清理内容::<坐标>.system())
-                    .with_system(清理内容::<界面层>.system())
-                    .with_system(初始化处理.system()),
-            )
-            .add_system_set(
-                SystemSet::on_update(全局状态::主菜单)
-                    .with_system(点击开始按钮处理.system())
-                    .with_system(键盘处理.system()),
-            )
-            .add_system_set(
-                SystemSet::on_exit(全局状态::主菜单).with_system(清理内容::<菜单层>.system()),
-            );
+    fn build(&self, app: &mut App) {
+        app.add_system_set(
+            SystemSet::on_enter(全局状态::主菜单)
+                .with_system(清理内容::<坐标>)
+                .with_system(清理内容::<界面层>)
+                .with_system(初始化处理),
+        )
+        .add_system_set(
+            SystemSet::on_update(全局状态::主菜单)
+                .with_system(点击开始按钮处理)
+                .with_system(键盘处理),
+        )
+        .add_system_set(SystemSet::on_exit(全局状态::主菜单).with_system(清理内容::<菜单层>));
     }
 }
 
-/// 按钮事件
-struct ButtonMaterials {
-    normal: Handle<ColorMaterial>,
-    hovered: Handle<ColorMaterial>,
-    // pressed: Handle<ColorMaterial>,
-}
-
-impl FromWorld for ButtonMaterials {
-    fn from_world(world: &mut World) -> Self {
-        let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-        ButtonMaterials {
-            normal: materials.add(Color::rgb(0.15, 0.15, 0.15).into()),
-            hovered: materials.add(Color::rgb(0.25, 0.25, 0.25).into()),
-            // pressed: materials.add(Color::rgb(0.1, 0.5, 0.1).into()),
-        }
-    }
-}
+const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
+// const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 pub fn 清理内容<T: Component>(mut 指令: Commands, 所有: Query<Entity, With<T>>) {
     所有.for_each(|e| {
@@ -53,28 +36,28 @@ pub fn 清理内容<T: Component>(mut 指令: Commands, 所有: Query<Entity, Wi
     });
 }
 
+#[derive(Component)]
 pub struct 菜单层;
 
 /// 按钮
+#[derive(Component)]
 struct 开始按钮;
 
 fn 初始化处理(
     // 世界: &mut World,
     mut 指令: Commands,
     字体资源: Res<字体素材>,
-    按钮素材: Res<ButtonMaterials>,
 ) {
-    指令.spawn_bundle(UiCameraBundle::default());
     指令
         .spawn_bundle(ButtonBundle {
             style: Style {
                 size: Size::new(Val::Px(120.0), Val::Px(50.0)),
-                margin: Rect::all(Val::Auto),
+                margin: UiRect::all(Val::Auto),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            material: 按钮素材.normal.clone(),
+            color: NORMAL_BUTTON.into(),
             ..Default::default()
         })
         .insert_bundle((菜单层, 开始按钮))
@@ -97,12 +80,8 @@ fn 初始化处理(
 }
 
 fn 点击开始按钮处理(
-    按钮材质: Res<ButtonMaterials>,
     mut 当前状态: ResMut<State<全局状态>>,
-    mut 交互队列: Query<
-        (&Interaction, &mut Handle<ColorMaterial>),
-        (With<开始按钮>, Changed<Interaction>),
-    >,
+    mut 交互队列: Query<(&Interaction, &mut UiColor), (With<开始按钮>, Changed<Interaction>)>,
     mut 地图加载事件发送器: EventWriter<地图加载事件>,
 ) {
     for (交互类型, mut 材质) in 交互队列.iter_mut() {
@@ -112,10 +91,10 @@ fn 点击开始按钮处理(
                 当前状态.set(全局状态::游戏中).unwrap();
             }
             Interaction::Hovered => {
-                *材质 = 按钮材质.hovered.clone();
+                *材质 = HOVERED_BUTTON.into();
             }
             Interaction::None => {
-                *材质 = 按钮材质.normal.clone();
+                *材质 = NORMAL_BUTTON.into();
             }
         }
     }

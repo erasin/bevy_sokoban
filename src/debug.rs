@@ -8,13 +8,14 @@ use bevy::{
 #[derive(Default)]
 pub struct 调试组件;
 
+#[derive(Component)]
 pub struct FpsText;
 
 impl Plugin for 调试组件 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default())
-            .add_startup_system(setup_system.system())
-            .add_system(fps_text_update_system.system());
+            .add_startup_system(setup_system)
+            .add_system(fps_text_update_system);
     }
 }
 
@@ -32,7 +33,7 @@ fn setup_system(
         .insert_bundle(TextBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                position: Rect {
+                position: UiRect {
                     top: Val::Px(5.0),
                     left: Val::Px(5.0),
                     ..Default::default()

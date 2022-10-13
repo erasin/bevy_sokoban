@@ -1,4 +1,4 @@
-use bevy::prelude::Plugin;
+use bevy::prelude::{App, Plugin};
 
 use crate::状态模块::全局状态;
 
@@ -28,7 +28,7 @@ impl Default for 全局数据 {
 pub struct 数据组件;
 
 impl Plugin for 数据组件 {
-    fn build(&self, app: &mut bevy::prelude::AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_state(全局状态::加载中).init_resource::<全局数据>();
     }
 }

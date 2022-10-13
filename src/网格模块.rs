@@ -6,9 +6,9 @@ pub struct Grid(pub i32, pub i32);
 pub struct 网格插件;
 
 impl Plugin for 网格插件 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(Grid(10, 10))
-            .add_system_set(SystemSet::on_enter(全局状态::游戏中).with_system(初始化处理.system()));
+            .add_system_set(SystemSet::on_enter(全局状态::游戏中).with_system(初始化处理));
     }
 }
 

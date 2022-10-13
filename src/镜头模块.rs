@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 use std::time::Duration;
 
+#[derive(Component)]
 pub struct 镜头;
 
 #[derive(PartialEq)]
@@ -30,24 +31,22 @@ impl 镜头特效插件 {
 }
 
 impl Plugin for 镜头特效插件 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(镜头数据 {
             状态: 镜头状态::正常,
             计时器: Timer::new(self.抖动持续时长, true),
         })
-        .add_startup_system(初始化处理.system())
+        .add_startup_system(初始化处理)
         .add_system_set(
             SystemSet::on_update(全局状态::游戏中)
-                .with_system(镜头抖动处理.system())
-                .with_system(镜头跟随处理.system()),
+                .with_system(镜头抖动处理)
+                .with_system(镜头跟随处理),
         );
     }
 }
 
 fn 初始化处理(mut 指令: Commands) {
-    指令
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
-        .insert(镜头);
+    指令.spawn_bundle(Camera2dBundle::default()).insert(镜头);
 }
 
 // 抖动原型
@@ -84,7 +83,7 @@ fn 镜头抖动处理(
 fn 镜头跟随处理(
     系统时间: Res<Time>,
     当前镜头: Res<镜头数据>,
-    mut query: QuerySet<(
+    mut query: ParamSet<(
         Query<&Transform, With<玩家>>,
         Query<&mut Transform, With<镜头>>,
     )>,
@@ -95,12 +94,12 @@ fn 镜头跟随处理(
         let mut x = 0.0;
         let mut y = 0.0;
 
-        for player_trans in query.q0().iter() {
+        for player_trans in query.p0().iter() {
             x = player_trans.translation.x;
             y = player_trans.translation.y;
         }
 
-        for mut camera_trans in query.q1_mut().iter_mut() {
+        for mut camera_trans in query.p1().iter_mut() {
             camera_trans.translation.x = x * delta;
             camera_trans.translation.y = y * delta;
         }

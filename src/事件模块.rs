@@ -4,7 +4,7 @@ use bevy::prelude::*;
 pub struct 事件注册;
 
 impl Plugin for 事件注册 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_event::<移动事件>()
             .add_event::<移动到目标事件>()
             .add_event::<地图加载事件>();

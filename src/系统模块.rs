@@ -4,6 +4,7 @@ use crate::地图模块::*;
 use crate::数据模块::*;
 use crate::状态模块::全局状态;
 use crate::状态模块::标签;
+use crate::组件模块::AnimationTimer;
 use crate::组件模块::{不可移动的, 可移动的, 坐标, 玩家, 目标点, 箱子};
 
 use bevy::{math::vec2, prelude::*};
@@ -14,17 +15,17 @@ use std::collections::HashSet;
 pub struct 行为组件;
 
 impl Plugin for 行为组件 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_event::<移动到目标事件>().add_system_set(
             SystemSet::on_update(全局状态::游戏中)
                 .after(标签::地图加载)
-                .with_system(动画效果处理.system())
-                .with_system(箱子移动到目标处理.system())
+                .with_system(动画效果处理)
+                .with_system(箱子移动到目标处理)
                 .after(标签::键盘处理)
-                .with_system(坐标转化处理.system())
-                .with_system(玩家移动处理.system())
-                .with_system(积分器处理.system())
-                .with_system(移动到目标事件监听处理.system()),
+                .with_system(坐标转化处理)
+                .with_system(玩家移动处理)
+                .with_system(积分器处理)
+                .with_system(移动到目标事件监听处理),
         );
     }
 }
@@ -33,12 +34,19 @@ impl Plugin for 行为组件 {
 pub fn 动画效果处理(
     系统时间: Res<Time>,
     瓦片资源: Res<Assets<TextureAtlas>>,
-    mut query: Query<(&mut Timer, &mut TextureAtlasSprite, &Handle<TextureAtlas>), With<玩家>>,
+    mut query: Query<
+        (
+            &mut AnimationTimer,
+            &mut TextureAtlasSprite,
+            &Handle<TextureAtlas>,
+        ),
+        With<玩家>,
+    >,
 ) {
     for (mut 计时器, mut sprite, texture_atlas_handle) in query.iter_mut() {
         if 计时器.tick(系统时间.delta()).finished() {
             let texture_atlas = 瓦片资源.get(texture_atlas_handle).unwrap();
-            sprite.index = ((sprite.index as usize + 1) % texture_atlas.textures.len()) as u32;
+            sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
         }
     }
 }
@@ -79,7 +87,7 @@ pub fn 玩家移动处理(
     音频资源: Res<音频素材>,
     地图: Res<地图数据>,
     mut 数据: ResMut<全局数据>,
-    mut query: QuerySet<(
+    mut query: ParamSet<(
         Query<(Entity, &mut 坐标, &mut 玩家)>,
         Query<(Entity, &坐标, &不可移动的)>,
         Query<(Entity, &mut 坐标, &可移动的), Without<玩家>>,
@@ -101,19 +109,19 @@ pub fn 玩家移动处理(
 
     // 所有可移动
     let 所有可移动对象: HashMap<(i32, i32), u32> = query
-        .q2_mut()
+        .p2()
         .iter_mut()
         .map(|(e, p, _)| ((p.x, p.y), e.id()))
         .collect::<HashMap<_, _>>();
 
     // 所有不可移动
     let 所有不可移动对象: HashMap<(i32, i32), u32> = query
-        .q1()
+        .p1()
         .iter()
         .map(|(e, p, _)| ((p.x, p.y), e.id()))
         .collect::<HashMap<_, _>>();
 
-    for (玩家实体, mut 玩家坐标, mut _per) in query.q0_mut().iter_mut() {
+    for (玩家实体, mut 玩家坐标, mut _per) in query.p0().iter_mut() {
         to_move.insert(玩家实体.id());
 
         // 移动方向链存储器
@@ -146,7 +154,8 @@ pub fn 玩家移动处理(
             match 所有可移动对象.get(&p2) {
                 Some(id) => to_move.insert(*id),
                 None => {
-                    音频.play(音频资源.audio_wall.as_weak());
+                    // let sink = 音频.play(音频资源.audio_wall.as_weak());
+                    // sink.play()
                     // 查询不可移动，清空队列
                     match 所有不可移动对象.get(&p2) {
                         Some(_) => to_move.clear(),
@@ -166,7 +175,7 @@ pub fn 玩家移动处理(
     }
 
     // 移动移动对象
-    for (e, mut pos, _) in query.q2_mut().iter_mut() {
+    for (e, mut pos, _) in query.p2().iter_mut() {
         if to_move.remove(&e.id()) {
             *pos = *pos + vol;
         }

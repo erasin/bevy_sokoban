@@ -10,19 +10,18 @@ use bevy::{
 pub struct 控制插件;
 
 impl Plugin for 控制插件 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.init_resource::<手柄连接器>()
-            .add_system_to_stage(CoreStage::PreUpdate, 手柄连接处理.system())
+            .add_system_to_stage(CoreStage::PreUpdate, 手柄连接处理)
             .add_system_set(
                 SystemSet::on_update(全局状态::游戏中)
                     // .with_run_criteria(FixedTimestep::step(0.55))
-                    .with_system(键盘处理.system())
-                    .with_system(手柄按键处理.system())
+                    .with_system(键盘处理)
+                    .with_system(手柄按键处理)
                     .label(标签::键盘处理),
             );
 
-        app.add_system(全局键盘处理.system())
-            .add_system(隐藏鼠标处理.system());
+        app.add_system(全局键盘处理).add_system(隐藏鼠标处理);
     }
 }
 
@@ -89,16 +88,17 @@ fn 手柄连接处理(
     mut 手柄事件读取器: EventReader<GamepadEvent>,
 ) {
     for event in 手柄事件读取器.iter() {
-        match &event {
-            GamepadEvent(gamepad, GamepadEventType::Connected) => {
-                lobby.手柄.insert(*gamepad);
-                info!("{:?} Connected", gamepad);
+        match event.event_type {
+            GamepadEventType::Connected => {
+                lobby.手柄.insert(event.gamepad);
+                info!("{:?} Connected", event.gamepad);
             }
-            GamepadEvent(gamepad, GamepadEventType::Disconnected) => {
-                lobby.手柄.remove(gamepad);
-                info!("{:?} Disconnected", gamepad);
+            GamepadEventType::Disconnected => {
+                lobby.手柄.remove(&event.gamepad);
+                info!("{:?} Disconnected", event.gamepad);
             }
-            _ => (),
+            GamepadEventType::ButtonChanged(_, _) => {}
+            GamepadEventType::AxisChanged(_, _) => {}
         }
     }
 }
@@ -114,13 +114,13 @@ fn 手柄按键处理(
     let mut y = 0;
 
     for gamepad in lobby.手柄.iter().cloned() {
-        if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::South)) {
+        if 按钮.just_released(GamepadButton::new(gamepad, GamepadButtonType::South)) {
             y = -1;
-        } else if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::North)) {
+        } else if 按钮.just_released(GamepadButton::new(gamepad, GamepadButtonType::North)) {
             y = 1;
-        } else if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::East)) {
+        } else if 按钮.just_released(GamepadButton::new(gamepad, GamepadButtonType::East)) {
             x = 1;
-        } else if 按钮.just_released(GamepadButton(gamepad, GamepadButtonType::West)) {
+        } else if 按钮.just_released(GamepadButton::new(gamepad, GamepadButtonType::West)) {
             x = -1;
         }
 
@@ -129,14 +129,17 @@ fn 手柄按键处理(
         }
 
         let right_trigger = 按钮力度
-            .get(GamepadButton(gamepad, GamepadButtonType::RightTrigger2))
+            .get(GamepadButton::new(
+                gamepad,
+                GamepadButtonType::RightTrigger2,
+            ))
             .unwrap();
         if right_trigger.abs() > 0.01 {
             info!("{:?} RightTrigger2 value is {}", gamepad, right_trigger);
         }
 
         let left_stick_x = 摇杆
-            .get(GamepadAxis(gamepad, GamepadAxisType::LeftStickX))
+            .get(GamepadAxis::new(gamepad, GamepadAxisType::LeftStickX))
             .unwrap();
         if left_stick_x.abs() > 0.01 {
             info!("{:?} LeftStickX value is {}", gamepad, left_stick_x);

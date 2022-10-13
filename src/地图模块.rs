@@ -12,14 +12,14 @@ use std::path::Path;
 pub struct 地图插件;
 
 impl Plugin for 地图插件 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_event::<地图加载事件>()
             .init_resource::<地图数据>()
             .add_system_set(
                 SystemSet::on_update(全局状态::游戏中)
-                    .with_system(快速加载处理.system())
-                    .with_system(地图加载事件监听.system())
-                    .with_system(缩放处理.system())
+                    .with_system(快速加载处理)
+                    .with_system(地图加载事件监听)
+                    .with_system(缩放处理)
                     .label(标签::地图加载),
             );
     }
@@ -134,7 +134,7 @@ impl 地图数据 {
                                 },
                                 ..Default::default()
                             })
-                            .insert(Timer::from_seconds(0.2, true))
+                            .insert(AnimationTimer(Timer::from_seconds(0.2, true)))
                             .insert(当前坐标.clone())
                             .insert(玩家);
                     }
@@ -167,7 +167,7 @@ impl 地图数据 {
                                 },
                                 ..Default::default()
                             })
-                            .insert(Timer::from_seconds(0.5, true))
+                            .insert(AnimationTimer(Timer::from_seconds(0.5, true)))
                             .insert(当前坐标.clone())
                             .insert(箱子 {
                                 sprite_ok: (素材.纹理表.as_weak(), 4),
@@ -255,7 +255,7 @@ fn 快速加载处理(
 fn 地图加载事件监听(
     mut 指令: Commands,
     mut 地图加载事件读取器: EventReader<地图加载事件>,
-    坐标实体: Query<Entity, With<坐标>>,
+    mut 坐标实体: Query<Entity, With<坐标>>,
     mut 地图资源: ResMut<地图数据>,
     素材: Res<纹理素材>,
     mut 数据: ResMut<全局数据>,

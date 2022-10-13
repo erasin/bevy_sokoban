@@ -7,28 +7,21 @@ use bevy::prelude::*;
 pub struct 界面组件;
 
 impl Plugin for 界面组件 {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         // app.init_resource::<ButtonMaterials>()
-        app.add_system_set(SystemSet::on_enter(全局状态::游戏中).with_system(初始化处理.system()))
+        app.add_system_set(SystemSet::on_enter(全局状态::游戏中).with_system(初始化处理))
             .add_system_set(
                 SystemSet::on_update(全局状态::游戏中)
-                    // .with_system(按钮处理.system())
-                    .with_system(文本变动.system()),
+                    // .with_system(按钮处理)
+                    .with_system(文本变动),
             );
     }
 }
 
+#[derive(Component)]
 pub struct 界面层;
 
-fn 初始化处理(
-    mut 指令: Commands,
-    mut 材质: ResMut<Assets<ColorMaterial>>,
-    数据: Res<全局数据>,
-    字体: Res<字体素材>,
-    // 按钮材质: Res<ButtonMaterials>,
-) {
-    指令.spawn_bundle(UiCameraBundle::default()).insert(界面层);
-
+fn 初始化处理(mut 指令: Commands, 数据: Res<全局数据>, 字体: Res<字体素材>) {
     指令
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -38,7 +31,7 @@ fn 初始化处理(
                 flex_direction: FlexDirection::Column,         // 主轴 行结构，默认列
                 ..Default::default()
             },
-            material: 材质.add(Color::NONE.into()),
+            color: Color::NONE.into(),
             ..Default::default()
         }) // 总节点
         .insert(界面层)
@@ -54,7 +47,7 @@ fn 初始化处理(
                         // align_items: AlignItems::FlexEnd,
                         ..Default::default()
                     },
-                    material: 材质.add(Color::hex("81C784").unwrap().into()),
+                    color: Color::hex("81C784").unwrap().into(),
                     ..Default::default()
                 })
                 .with_children(|行| {
@@ -112,22 +105,21 @@ fn 初始化处理(
                                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                                 ..Default::default()
                             },
-                            material: 材质.add(Color::hex("F57C00").unwrap().into()),
+                            color: Color::hex("F57C00").unwrap().into(),
                             ..Default::default()
                         })
                         .with_children(|列| {
                             列.spawn()
                                 .insert_bundle(TextBundle {
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         format!("计步:{}", 数据.计步数),
                                         TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
                                             font: 字体.font_ui.as_weak(),
                                         },
-                                        TextAlignment::default(),
                                     ),
-                                    ..Default::default()
+                                    ..default()
                                 })
                                 .insert(UI计步器);
                         });
@@ -141,7 +133,7 @@ fn 初始化处理(
                                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                                 ..Default::default()
                             },
-                            material: 材质.add(Color::hex("0288D1").unwrap().into()),
+                            color: Color::hex("0288D1").unwrap().into(),
                             ..Default::default()
                         })
                         .with_children(|列| {
@@ -150,14 +142,13 @@ fn 初始化处理(
                                     style: Style {
                                         ..Default::default()
                                     },
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         format!("p:{}", 数据.踩点),
                                         TextStyle {
                                             font_size: 30.0,
                                             color: Color::BLACK,
                                             font: 字体.font_ui.as_weak(),
                                         },
-                                        TextAlignment::default(),
                                     ),
                                     ..Default::default()
                                 })
@@ -172,15 +163,15 @@ fn 文本变动(
     地图: Res<地图数据>,
     // mut step_query: Query<(&mut Text, &UIStep)>,
     // mut spot_query: Query<(&mut Text, &UISpot)>,
-    mut query: QuerySet<(
+    mut query: ParamSet<(
         Query<&mut Text, With<UI计步器>>,
         Query<&mut Text, With<UI目标计数>>,
     )>,
 ) {
-    for mut t in query.q0_mut().iter_mut() {
+    for mut t in query.p0().iter_mut() {
         t.sections[0].value = format!("step:{}", 数据.计步数);
     }
-    for mut t in query.q1_mut().iter_mut() {
+    for mut t in query.p1().iter_mut() {
         t.sections[0].value = format!("P:{}/{}", 数据.踩点, 地图.目标数量);
     }
 }
@@ -202,7 +193,9 @@ fn 文本变动(
 //     }
 // }
 
+#[derive(Component)]
 pub struct UI计步器;
+#[derive(Component)]
 pub struct UI目标计数;
 // pub struct UI按钮下一关;
 
