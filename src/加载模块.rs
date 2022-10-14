@@ -2,7 +2,7 @@ use crate::全局状态;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-// use bevy_kira_audio::AudioSource;
+use bevy_kira_audio::AudioSource;
 
 pub struct 加载素材库插件;
 
@@ -27,8 +27,8 @@ pub struct 字体素材 {
 
 #[derive(AssetCollection)]
 pub struct 音频素材 {
-    #[asset(path = "sounds/wall.wav")]
-    pub audio_wall: Handle<AudioSource>,
+    #[asset(path = "audio/wall.wav")]
+    pub wall: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection)]
@@ -43,6 +43,7 @@ pub struct 纹理素材 {
     ))]
     #[asset(path = "textures/sheet.png")]
     pub 纹理表: Handle<TextureAtlas>,
+
     #[asset(texture_atlas(
         tile_size_x = 32.,
         tile_size_y = 32.,

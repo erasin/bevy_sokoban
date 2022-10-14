@@ -19,7 +19,7 @@ impl Default for 全局数据 {
             计步数: Default::default(),
             踩点: Default::default(),
             地图: Some(1),
-            缩放比例: 2.0,
+            缩放比例: 1.0,
             瓦片尺寸: 32.0,
         }
     }

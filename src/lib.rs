@@ -38,6 +38,9 @@ use 行为模块::控制插件;
 
 use 镜头模块::镜头特效插件;
 
+#[cfg(debug_assertions)]
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+
 pub struct 组件集合;
 
 impl PluginGroup for 组件集合 {
@@ -53,5 +56,12 @@ impl PluginGroup for 组件集合 {
             .add(控制插件)
             .add(行为组件)
             .add(调试组件);
+
+        #[cfg(debug_assertions)]
+        {
+            group
+                .add(FrameTimeDiagnosticsPlugin::default())
+                .add(LogDiagnosticsPlugin::default());
+        }
     }
 }

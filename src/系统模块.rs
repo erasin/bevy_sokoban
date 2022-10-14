@@ -1,5 +1,4 @@
 use crate::事件模块::*;
-use crate::加载模块::音频素材;
 use crate::地图模块::*;
 use crate::数据模块::*;
 use crate::状态模块::全局状态;
@@ -80,11 +79,9 @@ pub fn 坐标转化处理(
     }
 }
 
-///  移动  
+/// 玩家移动  
 pub fn 玩家移动处理(
     mut 移动事件读取器: EventReader<移动事件>,
-    音频: Res<Audio>,
-    音频资源: Res<音频素材>,
     地图: Res<地图数据>,
     mut 数据: ResMut<全局数据>,
     mut query: ParamSet<(
@@ -182,7 +179,7 @@ pub fn 玩家移动处理(
     }
 }
 
-// 完成处理
+// 完成处理 箱子移动到目标处理
 pub fn 箱子移动到目标处理(
     mut 指令: Commands,
     mut 数据: ResMut<全局数据>,
