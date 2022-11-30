@@ -23,23 +23,23 @@ pub struct 界面层;
 
 fn 初始化处理(mut 指令: Commands, 数据: Res<全局数据>, 字体: Res<字体素材>) {
     指令
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 //  100%
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 justify_content: JustifyContent::SpaceBetween, // 对齐方式
                 flex_direction: FlexDirection::Column,         // 主轴 行结构，默认列
+
                 ..Default::default()
             },
-            color: Color::NONE.into(),
+            background_color: Color::NONE.into(),
             ..Default::default()
         }) // 总节点
         .insert(界面层)
         .with_children(|节点| {
             // 行1
             节点
-                .spawn()
-                .insert_bundle(NodeBundle {
+                .spawn(NodeBundle {
                     style: Style {
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
@@ -47,7 +47,7 @@ fn 初始化处理(mut 指令: Commands, 数据: Res<全局数据>, 字体: Res<
                         // align_items: AlignItems::FlexEnd,
                         ..Default::default()
                     },
-                    color: Color::hex("81C784").unwrap().into(),
+                    background_color: Color::hex("81C784").unwrap().into(),
                     ..Default::default()
                 })
                 .with_children(|行| {
@@ -76,7 +76,7 @@ fn 初始化处理(mut 指令: Commands, 数据: Res<全局数据>, 字体: Res<
                     //                     align_items: AlignItems::Center,
                     //                     ..Default::default()
                     //                 },
-                    //                 material: 按钮材质.normal.as_weak(),
+                    //                 material: 按钮材质.normal.cast_weak(),
                     //                 ..Default::default()
                     //             })
                     //             .insert(UI按钮下一关)
@@ -86,7 +86,7 @@ fn 初始化处理(mut 指令: Commands, 数据: Res<全局数据>, 字体: Res<
                     //                         "下一关".to_string(),
                     //                         TextStyle {
                     //                             font_size: 20.0,
-                    //                             font: 字体.font_ui.as_weak(),
+                    //                             font: 字体.font_ui.cast_weak(),
                     //                             color: Color::rgb(0.8, 0.8, 0.8),
                     //                         },
                     //                         TextAlignment::default(),
@@ -97,63 +97,59 @@ fn 初始化处理(mut 指令: Commands, 数据: Res<全局数据>, 字体: Res<
                     //     });
 
                     // 列2
-                    行.spawn()
-                        .insert_bundle(NodeBundle {
-                            style: Style {
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::Center,
-                                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                                ..Default::default()
-                            },
-                            color: Color::hex("F57C00").unwrap().into(),
+                    行.spawn(NodeBundle {
+                        style: Style {
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                             ..Default::default()
+                        },
+                        background_color: Color::hex("F57C00").unwrap().into(),
+                        ..Default::default()
+                    })
+                    .with_children(|列| {
+                        列.spawn(TextBundle {
+                            text: Text::from_section(
+                                format!("计步:{}", 数据.计步数),
+                                TextStyle {
+                                    font_size: 30.0,
+                                    color: Color::BLACK,
+                                    font: 字体.font_ui.cast_weak(),
+                                },
+                            ),
+                            ..default()
                         })
-                        .with_children(|列| {
-                            列.spawn()
-                                .insert_bundle(TextBundle {
-                                    text: Text::from_section(
-                                        format!("计步:{}", 数据.计步数),
-                                        TextStyle {
-                                            font_size: 30.0,
-                                            color: Color::BLACK,
-                                            font: 字体.font_ui.as_weak(),
-                                        },
-                                    ),
-                                    ..default()
-                                })
-                                .insert(UI计步器);
-                        });
+                        .insert(UI计步器);
+                    });
 
                     // 列3
-                    行.spawn()
-                        .insert_bundle(NodeBundle {
+                    行.spawn(NodeBundle {
+                        style: Style {
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                            ..Default::default()
+                        },
+                        background_color: Color::hex("0288D1").unwrap().into(),
+                        ..Default::default()
+                    })
+                    .with_children(|列| {
+                        列.spawn(TextBundle {
                             style: Style {
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::Center,
-                                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                                 ..Default::default()
                             },
-                            color: Color::hex("0288D1").unwrap().into(),
+                            text: Text::from_section(
+                                format!("p:{}", 数据.踩点),
+                                TextStyle {
+                                    font_size: 30.0,
+                                    color: Color::BLACK,
+                                    font: 字体.font_ui.cast_weak(),
+                                },
+                            ),
                             ..Default::default()
                         })
-                        .with_children(|列| {
-                            列.spawn()
-                                .insert_bundle(TextBundle {
-                                    style: Style {
-                                        ..Default::default()
-                                    },
-                                    text: Text::from_section(
-                                        format!("p:{}", 数据.踩点),
-                                        TextStyle {
-                                            font_size: 30.0,
-                                            color: Color::BLACK,
-                                            font: 字体.font_ui.as_weak(),
-                                        },
-                                    ),
-                                    ..Default::default()
-                                })
-                                .insert(UI目标计数);
-                        });
+                        .insert(UI目标计数);
+                    });
                 });
         });
 }
@@ -218,17 +214,17 @@ pub struct UI目标计数;
 //         match *interaction {
 //             Interaction::Clicked => {
 //                 text.sections[0].value = "Press".to_string();
-//                 *material = button_materials.pressed.as_weak();
+//                 *material = button_materials.pressed.cast_weak();
 //                 println!("Press ok");
 //                 // TODO load map
 //             }
 //             Interaction::Hovered => {
 //                 text.sections[0].value = "Hover".to_string();
-//                 *material = button_materials.hovered.as_weak();
+//                 *material = button_materials.hovered.cast_weak();
 //             }
 //             Interaction::None => {
 //                 text.sections[0].value = "Button".to_string();
-//                 *material = button_materials.normal.as_weak();
+//                 *material = button_materials.normal.cast_weak();
 //             }
 //         }
 //     }

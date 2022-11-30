@@ -27,9 +27,10 @@ impl Plugin for 主菜单组件 {
     }
 }
 
+#[derive(Resource)]
 struct ButtonColors {
-    normal: UiColor,
-    hovered: UiColor,
+    normal: BackgroundColor,
+    hovered: BackgroundColor,
 }
 
 impl Default for ButtonColors {
@@ -61,20 +62,23 @@ fn 初始化处理(
     button_colors: Res<ButtonColors>,
 ) {
     指令
-        .spawn_bundle(ButtonBundle {
-            style: Style {
-                size: Size::new(Val::Px(120.0), Val::Px(50.0)),
-                margin: UiRect::all(Val::Auto),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    size: Size::new(Val::Px(120.0), Val::Px(50.0)),
+                    margin: UiRect::all(Val::Auto),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..Default::default()
+                },
+                background_color: button_colors.normal,
                 ..Default::default()
             },
-            color: button_colors.normal,
-            ..Default::default()
-        })
-        .insert_bundle((菜单层, 开始按钮))
+            菜单层,
+            开始按钮,
+        ))
         .with_children(|parent| {
-            parent.spawn_bundle(TextBundle {
+            parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
                         value: "Play".to_string(),
@@ -93,7 +97,10 @@ fn 初始化处理(
 
 fn 点击开始按钮处理(
     mut 当前状态: ResMut<State<全局状态>>,
-    mut 交互队列: Query<(&Interaction, &mut UiColor), (With<开始按钮>, Changed<Interaction>)>,
+    mut 交互队列: Query<
+        (&Interaction, &mut BackgroundColor),
+        (With<开始按钮>, Changed<Interaction>),
+    >,
     mut 地图加载事件发送器: EventWriter<地图加载事件>,
     button_colors: Res<ButtonColors>,
 ) {

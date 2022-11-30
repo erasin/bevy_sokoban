@@ -13,6 +13,7 @@ pub enum 镜头状态 {
     跟随, // 用户跟随
 }
 
+#[derive(Resource)]
 pub struct 镜头数据 {
     pub 状态: 镜头状态,
     pub 计时器: Timer,
@@ -34,7 +35,7 @@ impl Plugin for 镜头特效插件 {
     fn build(&self, app: &mut App) {
         app.insert_resource(镜头数据 {
             状态: 镜头状态::正常,
-            计时器: Timer::new(self.抖动持续时长, true),
+            计时器: Timer::new(self.抖动持续时长, TimerMode::Repeating),
         })
         .add_startup_system(初始化处理)
         .add_system_set(
@@ -46,7 +47,7 @@ impl Plugin for 镜头特效插件 {
 }
 
 fn 初始化处理(mut 指令: Commands) {
-    指令.spawn_bundle(Camera2dBundle::default()).insert(镜头);
+    指令.spawn((Camera2dBundle::default(), 镜头));
 }
 
 // 抖动原型

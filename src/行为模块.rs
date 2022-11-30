@@ -5,6 +5,7 @@ use bevy::{
     input::gamepad::{Gamepad, GamepadButton, GamepadEvent, GamepadEventType},
     prelude::*,
     utils::HashSet,
+    window::CursorGrabMode,
 };
 
 pub struct 控制插件;
@@ -78,7 +79,7 @@ fn 键盘处理(
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 struct 手柄连接器 {
     手柄: HashSet<Gamepad>,
 }
@@ -89,7 +90,7 @@ fn 手柄连接处理(
 ) {
     for event in 手柄事件读取器.iter() {
         match event.event_type {
-            GamepadEventType::Connected => {
+            GamepadEventType::Connected(_) => {
                 lobby.手柄.insert(event.gamepad);
                 info!("{:?} Connected", event.gamepad);
             }
@@ -176,12 +177,12 @@ fn 隐藏鼠标处理(
     let 主窗口 = 窗口.get_primary_mut().unwrap();
 
     if 鼠标按键.just_pressed(MouseButton::Left) {
-        主窗口.set_cursor_lock_mode(true);
+        主窗口.set_cursor_grab_mode(CursorGrabMode::Locked);
         主窗口.set_cursor_visibility(false);
     }
 
     if 按键.just_pressed(KeyCode::Escape) {
-        主窗口.set_cursor_lock_mode(false);
+        主窗口.set_cursor_grab_mode(CursorGrabMode::None);
         主窗口.set_cursor_visibility(true);
     }
 }

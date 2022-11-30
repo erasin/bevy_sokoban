@@ -1,7 +1,10 @@
 use crate::事件模块::地图加载事件;
+use crate::加载模块::纹理素材;
 use crate::数据模块::全局数据;
 use crate::状态模块::标签;
-use crate::{加载模块::纹理素材, 状态模块::全局状态, 组件模块::*};
+use crate::组件模块::*;
+
+use crate::状态模块::全局状态;
 
 use bevy::prelude::*;
 use std::fs::File;
@@ -25,7 +28,7 @@ impl Plugin for 地图插件 {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct 地图数据 {
     pub height: usize,
     pub width: usize,
@@ -73,10 +76,9 @@ impl 地图数据 {
                 match column.as_str() {
                     "." => {
                         // floor
-                        指令
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.纹理表.as_weak(),
+                        指令.spawn((
+                            SpriteSheetBundle {
+                                texture_atlas: 素材.纹理表.cast_weak(),
                                 transform: Transform::from_scale(Vec3::new(
                                     缩放比例,
                                     缩放比例,
@@ -84,16 +86,16 @@ impl 地图数据 {
                                 )),
                                 sprite: TextureAtlasSprite::new(1),
                                 ..Default::default()
-                            })
-                            .insert(当前坐标.clone())
-                            .insert(地板);
+                            },
+                            当前坐标.clone(),
+                            地板,
+                        ));
                     }
                     "W" => {
                         // wall
                         指令
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.纹理表.as_weak(),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: 素材.纹理表.cast_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
                                     rotation: Quat::IDENTITY,
@@ -109,9 +111,8 @@ impl 地图数据 {
                     "P" => {
                         指令
                             // floor
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.纹理表.as_weak(),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: 素材.纹理表.cast_weak(),
                                 transform: Transform::from_scale(Vec3::new(
                                     缩放比例,
                                     缩放比例,
@@ -124,9 +125,8 @@ impl 地图数据 {
                             .insert(地板);
 
                         指令
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.用户.as_weak(),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: 素材.用户.cast_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 1.0),
                                     rotation: Quat::IDENTITY,
@@ -134,16 +134,18 @@ impl 地图数据 {
                                 },
                                 ..Default::default()
                             })
-                            .insert(AnimationTimer(Timer::from_seconds(0.2, true)))
+                            .insert(AnimationTimer(Timer::from_seconds(
+                                0.2,
+                                TimerMode::Repeating,
+                            )))
                             .insert(当前坐标.clone())
                             .insert(玩家);
                     }
                     "B" => {
                         // floor
                         指令
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.纹理表.as_weak(),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: 素材.纹理表.cast_weak(),
                                 transform: Transform::from_scale(Vec3::new(
                                     缩放比例,
                                     缩放比例,
@@ -157,9 +159,8 @@ impl 地图数据 {
 
                         // box
                         指令
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.蓝箱子.as_weak(),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: 素材.蓝箱子.cast_weak(),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 2.0),
                                     rotation: Quat::IDENTITY,
@@ -167,19 +168,21 @@ impl 地图数据 {
                                 },
                                 ..Default::default()
                             })
-                            .insert(AnimationTimer(Timer::from_seconds(0.5, true)))
+                            .insert(AnimationTimer(Timer::from_seconds(
+                                0.5,
+                                TimerMode::Repeating,
+                            )))
                             .insert(当前坐标.clone())
                             .insert(箱子 {
-                                sprite_ok: (素材.纹理表.as_weak(), 4),
+                                sprite_ok: (素材.纹理表.cast_weak(), 4),
                             })
                             .insert(可移动的);
                     }
                     "S" => {
                         // floor
                         指令
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.纹理表.as_weak(),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: 素材.纹理表.cast_weak(),
                                 transform: Transform::from_scale(Vec3::new(
                                     缩放比例,
                                     缩放比例,
@@ -193,9 +196,8 @@ impl 地图数据 {
 
                         // box spot
                         指令
-                            .spawn()
-                            .insert_bundle(SpriteSheetBundle {
-                                texture_atlas: 素材.纹理表.as_weak(),
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: 素材.纹理表.cast_weak(),
                                 sprite: TextureAtlasSprite::new(2),
                                 transform: Transform {
                                     translation: Vec3::new(0.0, 0.0, 0.1),

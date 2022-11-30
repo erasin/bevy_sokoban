@@ -29,8 +29,7 @@ fn setup_system(
     let font_handle = asset_server.load("fonts/KenneyFuture.ttf");
 
     commands
-        .spawn()
-        .insert_bundle(TextBundle {
+        .spawn(TextBundle {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: UiRect {

@@ -19,6 +19,7 @@ impl Plugin for InternalAudioPlugin {
 }
 
 // struct MusicController(Handle<AudioSink>);
+#[derive(Resource)]
 struct MusicController(Handle<AudioInstance>);
 
 fn start_audio(

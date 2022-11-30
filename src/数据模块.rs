@@ -1,8 +1,8 @@
-use bevy::prelude::{App, Plugin};
+use bevy::prelude::{App, Plugin, Resource};
 
 use crate::状态模块::全局状态;
 
-#[derive(Clone)]
+#[derive(Clone, Resource)]
 pub struct 全局数据 {
     pub 用户名: String,
     pub 计步数: i32,

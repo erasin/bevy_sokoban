@@ -1,4 +1,4 @@
-use crate::全局状态;
+use crate::状态模块::全局状态;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -19,19 +19,19 @@ impl Plugin for 加载素材库插件 {
     }
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct 字体素材 {
     #[asset(path = "fonts/KenneyFuture.ttf")]
     pub font_ui: Handle<Font>,
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct 音频素材 {
     #[asset(path = "audio/wall.wav")]
     pub wall: Handle<AudioSource>,
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct 纹理素材 {
     #[asset(texture_atlas(
         tile_size_x = 32.,

@@ -24,7 +24,7 @@ mod 镜头模块;
 #[path = "音频模块.rs"]
 mod 音频模块;
 
-use bevy::prelude::*;
+use bevy::{app::PluginGroupBuilder, prelude::*};
 use debug::调试组件;
 use 事件模块::事件注册;
 use 加载模块::加载素材库插件;
@@ -38,14 +38,11 @@ use 行为模块::控制插件;
 
 use 镜头模块::镜头特效插件;
 
-#[cfg(debug_assertions)]
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-
 pub struct 组件集合;
 
 impl PluginGroup for 组件集合 {
-    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
             .add(数据组件)
             .add(加载素材库插件)
             .add(事件注册)
@@ -55,13 +52,14 @@ impl PluginGroup for 组件集合 {
             .add(界面组件)
             .add(控制插件)
             .add(行为组件)
-            .add(调试组件);
+            .add(调试组件)
+    }
 
-        #[cfg(debug_assertions)]
-        {
-            group
-                .add(FrameTimeDiagnosticsPlugin::default())
-                .add(LogDiagnosticsPlugin::default());
-        }
+    fn name() -> String {
+        std::any::type_name::<Self>().to_string()
+    }
+
+    fn set<T: Plugin>(self, plugin: T) -> bevy::app::PluginGroupBuilder {
+        self.build().set(plugin)
     }
 }

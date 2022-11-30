@@ -108,18 +108,18 @@ pub fn 玩家移动处理(
     let 所有可移动对象: HashMap<(i32, i32), u32> = query
         .p2()
         .iter_mut()
-        .map(|(e, p, _)| ((p.x, p.y), e.id()))
+        .map(|(e, p, _)| ((p.x, p.y), e.index()))
         .collect::<HashMap<_, _>>();
 
     // 所有不可移动
     let 所有不可移动对象: HashMap<(i32, i32), u32> = query
         .p1()
         .iter()
-        .map(|(e, p, _)| ((p.x, p.y), e.id()))
+        .map(|(e, p, _)| ((p.x, p.y), e.index()))
         .collect::<HashMap<_, _>>();
 
     for (玩家实体, mut 玩家坐标, mut _per) in query.p0().iter_mut() {
-        to_move.insert(玩家实体.id());
+        to_move.insert(玩家实体.index());
 
         // 移动方向链存储器
         let (start, end, is_x) = match &vol {
@@ -151,7 +151,7 @@ pub fn 玩家移动处理(
             match 所有可移动对象.get(&p2) {
                 Some(id) => to_move.insert(*id),
                 None => {
-                    // let sink = 音频.play(音频资源.audio_wall.as_weak());
+                    // let sink = 音频.play(音频资源.audio_wall.cast_weak());
                     // sink.play()
                     // 查询不可移动，清空队列
                     match 所有不可移动对象.get(&p2) {
@@ -164,7 +164,7 @@ pub fn 玩家移动处理(
         }
 
         // 移动用户
-        if to_move.remove(&玩家实体.id()) {
+        if to_move.remove(&玩家实体.index()) {
             *玩家坐标 = *玩家坐标 + vol;
             数据.计步数 += 1;
             // println!("{} {}", per.name, per.step);
@@ -173,7 +173,7 @@ pub fn 玩家移动处理(
 
     // 移动移动对象
     for (e, mut pos, _) in query.p2().iter_mut() {
-        if to_move.remove(&e.id()) {
+        if to_move.remove(&e.index()) {
             *pos = *pos + vol;
         }
     }
@@ -201,7 +201,7 @@ pub fn 箱子移动到目标处理(
                     // commands.remove_one::<Movable>(e);
                     // commands.insert_one(e, Immovable);
                     sprite.index = b.sprite_ok.1;
-                    *texture = b.sprite_ok.0.as_weak();
+                    *texture = b.sprite_ok.0.cast_weak();
                     pse.到达 = true;
                     数据.踩点 += 1;
                     移动到目标事件发送器.send(移动到目标事件::new(pb.x, pb.y));
